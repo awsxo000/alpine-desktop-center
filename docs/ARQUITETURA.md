@@ -74,3 +74,15 @@ tag Ansible correspondente e consultar o log persistente daquela role.
 Os logs individuais ficam em `~/.local/state/alpine-desktop-center/logs/`.
 Essa camada é uma visualização e um controlador seguro; ela não duplica as
 tarefas das roles nem cria uma segunda fonte de configuração.
+
+## Identidade da interface
+
+A interface usa um tema escuro azul-marinho por padrão, com azul elétrico para
+ações, seleção e estados de foco. Um tema claro complementar usa superfícies
+brancas e o mesmo azul de ação. A preferência é salva com `QSettings` para
+permanecer entre aberturas.
+
+O cabeçalho centraliza o nome e a descrição do produto, exibe o símbolo da
+marca e mantém o controle de tema à direita. A composição foi inspirada na
+linguagem visual institucional da Roku: profundidade, contraste, gradientes e
+linhas orbitais, com uma marca própria para o Alpine Desktop Center.

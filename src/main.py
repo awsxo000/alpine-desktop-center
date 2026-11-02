@@ -11,7 +11,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QProcess, QTimer
+from PySide6.QtCore import QProcess, QSettings, QTimer, Qt
 from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.11"
+APP_VERSION = "0.1.0-alpha.12"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ICON_PATH = PROJECT_ROOT / "resources" / "alpine-desktop-center.svg"
 
@@ -119,6 +119,8 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.backend = Backend()
+        self.settings = QSettings("AlpineDesktop", "AlpineDesktopCenter")
+        self.theme = str(self.settings.value("theme", "dark"))
         self.process: QProcess | None = None
         self.active_purpose = ""
         self.active_module: ModuleSpec | None = None
@@ -126,18 +128,37 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_NAME} — {APP_VERSION}")
         self.setMinimumSize(980, 650)
         self._build_ui()
+        self._apply_theme()
         self._refresh_backend_status()
 
     def _build_ui(self) -> None:
         root = QWidget()
+        root.setObjectName("Root")
         root_layout = QVBoxLayout(root)
         root_layout.setSpacing(12)
 
+        header = QHBoxLayout()
+        header.setContentsMargins(8, 8, 8, 8)
+        brand_icon = QLabel()
+        brand_icon.setPixmap(QIcon(str(ICON_PATH)).pixmap(52, 52))
+        header.addWidget(brand_icon)
+        title_column = QVBoxLayout()
         title = QLabel(APP_NAME)
-        title.setFont(QFont("", 20, QFont.Weight.Bold))
+        title.setObjectName("Title")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setFont(QFont("", 21, QFont.Weight.Bold))
         subtitle = QLabel("Configure, inspect and maintain your Alpine Linux desktop")
-        root_layout.addWidget(title)
-        root_layout.addWidget(subtitle)
+        subtitle.setObjectName("Subtitle")
+        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_column.addWidget(title)
+        title_column.addWidget(subtitle)
+        header.addLayout(title_column, 1)
+        self.theme_button = QPushButton()
+        self.theme_button.setObjectName("ThemeButton")
+        self.theme_button.setMinimumHeight(36)
+        self.theme_button.clicked.connect(self._toggle_theme)
+        header.addWidget(self.theme_button)
+        root_layout.addLayout(header)
 
         status_box = QGroupBox("Backend")
         status_layout = QFormLayout(status_box)
@@ -182,6 +203,46 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.log, 1)
         return tab
 
+    def _apply_theme(self) -> None:
+        dark = self.theme != "light"
+        if dark:
+            colors = {
+                "bg": "#061226", "surface": "#0b1d38", "raised": "#10284a",
+                "text": "#f5f8ff", "muted": "#9bb0d1", "accent": "#4d7ff2",
+                "accent_hover": "#6b98ff", "border": "#29466e", "selection": "#1d4fae",
+            }
+            self.theme_button.setText("Light theme")
+        else:
+            colors = {
+                "bg": "#f4f7fd", "surface": "#ffffff", "raised": "#eaf1fc",
+                "text": "#10213a", "muted": "#58708f", "accent": "#2864db",
+                "accent_hover": "#1d4fb6", "border": "#c5d5ec", "selection": "#dce9ff",
+            }
+            self.theme_button.setText("Dark theme")
+        self.setStyleSheet(f"""
+            QMainWindow, QWidget#Root {{ background: {colors['bg']}; color: {colors['text']}; }}
+            QLabel#Title {{ color: {colors['text']}; letter-spacing: 1px; }}
+            QLabel#Subtitle {{ color: {colors['muted']}; }}
+            QGroupBox {{ background: {colors['surface']}; border: 1px solid {colors['border']}; border-radius: 12px; margin-top: 12px; padding: 14px; font-weight: 600; }}
+            QGroupBox::title {{ subcontrol-origin: margin; left: 16px; padding: 0 6px; color: {colors['accent']}; }}
+            QTabWidget::pane {{ border: 1px solid {colors['border']}; border-radius: 10px; background: {colors['surface']}; }}
+            QTabBar::tab {{ background: {colors['raised']}; color: {colors['muted']}; padding: 10px 22px; margin-right: 4px; border-radius: 7px; }}
+            QTabBar::tab:selected {{ background: {colors['accent']}; color: #ffffff; }}
+            QListWidget, QPlainTextEdit {{ background: {colors['surface']}; color: {colors['text']}; border: 1px solid {colors['border']}; border-radius: 9px; padding: 8px; }}
+            QListWidget::item {{ padding: 10px 8px; border-radius: 6px; color: {colors['text']}; }}
+            QListWidget::item:selected {{ background: {colors['selection']}; color: {colors['text']}; }}
+            QPushButton {{ background: {colors['accent']}; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 600; }}
+            QPushButton:hover {{ background: {colors['accent_hover']}; }}
+            QPushButton:disabled {{ background: {colors['raised']}; color: {colors['muted']}; }}
+            QPushButton#ThemeButton {{ background: transparent; color: {colors['accent']}; border: 1px solid {colors['accent']}; }}
+            QPushButton#ThemeButton:hover {{ background: {colors['selection']}; }}
+        """)
+
+    def _toggle_theme(self) -> None:
+        self.theme = "light" if self.theme != "light" else "dark"
+        self.settings.setValue("theme", self.theme)
+        self._apply_theme()
+
     def _build_modules_tab(self) -> QWidget:
         tab = QWidget()
         layout = QHBoxLayout(tab)
@@ -196,10 +257,13 @@ class MainWindow(QMainWindow):
 
         details = QVBoxLayout()
         self.module_title = QLabel("Select a module")
+        self.module_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.module_title.setFont(QFont("", 17, QFont.Weight.Bold))
         self.module_description = QLabel("Choose a role to inspect its status or run it independently.")
+        self.module_description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.module_description.setWordWrap(True)
         self.module_status = QLabel("Status: Unknown")
+        self.module_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         details.addWidget(self.module_title)
         details.addWidget(self.module_description)
         details.addWidget(self.module_status)

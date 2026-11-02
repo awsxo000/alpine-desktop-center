@@ -39,6 +39,10 @@ The source-controlled assets are [`alpine-desktop-center.svg`](resources/alpine-
 for the application icon and [`alpine-desktop-center-logo.svg`](resources/alpine-desktop-center-logo.svg)
 for the horizontal wordmark.
 
+The interface opens in the Roku-inspired dark theme by default and includes a
+`Light theme` / `Dark theme` control in the header. The selected theme is saved
+for the next launch.
+
 ## Development setup
 
 The alpha uses Python and PySide6. On Alpine 3.24, the launcher detects the

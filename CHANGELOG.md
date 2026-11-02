@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.12
+
+- Added Roku-inspired dark and light themes.
+- Added centered branded header with persistent theme preference.
+- Refined tabs, cards, lists, buttons and module details with the navy/electric-blue palette.
+
 ## 0.1.0-alpha.11
 
 - Added Overview and Modules tabs.
