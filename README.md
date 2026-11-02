@@ -20,9 +20,16 @@ arbitrary commands typed into the interface. Backend output is shown in the
 activity log so the terminal remains optional, but it is still available for
 recovery and advanced use.
 
-The project includes its own Alpine mountain and desktop configuration icon.
-The optional installation flow places it in the user's KDE icon theme instead
-of using a generic Wayland or computer icon.
+The project includes its own Alpine mountain and desktop configuration identity.
+The visual direction uses a deep navy background, electric blue gradients,
+faceted geometry and subtle orbital lines, inspired by the Roku institutional
+site while remaining a distinct mark for this application. The optional
+installation flow places the icon in the user's KDE icon theme instead of
+using a generic Wayland or computer icon.
+
+The source-controlled assets are [`alpine-desktop-center.svg`](resources/alpine-desktop-center.svg)
+for the application icon and [`alpine-desktop-center-logo.svg`](resources/alpine-desktop-center-logo.svg)
+for the horizontal wordmark.
 
 ## Development setup
 

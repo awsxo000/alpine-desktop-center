@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 180" role="img" aria-labelledby="title desc">
+  <title id="title">Alpine Desktop Center</title>
+  <desc id="desc">Alpine Desktop Center wordmark with a faceted blue orbital peak</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07162d"/>
+      <stop offset="1" stop-color="#0c2446"/>
+    </linearGradient>
+    <radialGradient id="blue" cx="35%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#4b83ff"/>
+      <stop offset="1" stop-color="#123a9e"/>
+    </radialGradient>
+  </defs>
+  <rect width="760" height="180" rx="32" fill="url(#bg)"/>
+  <g transform="translate(28 20)">
+    <g fill="none" stroke="#668ee8" stroke-width="1.2" opacity=".45">
+      <ellipse cx="70" cy="70" rx="62" ry="35" transform="rotate(-30 70 70)"/>
+      <ellipse cx="70" cy="70" rx="61" ry="35" transform="rotate(30 70 70)"/>
+    </g>
+    <circle cx="70" cy="70" r="49" fill="url(#blue)"/>
+    <path d="M37 105 69 43l14 26 11-18 25 54H37Z" fill="#b9ceff"/>
+    <path d="m69 43 8 15-7 7-9-10Z" fill="#fff"/>
+    <path d="m83 69 11-18 9 18-11 10Z" fill="#3158ba"/>
+  </g>
+  <text x="166" y="91" fill="#f5f8ff" font-family="Inter,Segoe UI,sans-serif" font-size="36" font-weight="600" letter-spacing="3">ALPINE</text>
+  <text x="169" y="126" fill="#83a8ff" font-family="Inter,Segoe UI,sans-serif" font-size="18" font-weight="500" letter-spacing="4">DESKTOP CENTER</text>
+</svg>

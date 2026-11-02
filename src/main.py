@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 
 from PySide6.QtCore import QProcess, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QGroupBox,
@@ -27,7 +27,9 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.1"
+APP_VERSION = "0.1.0-alpha.10"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ICON_PATH = PROJECT_ROOT / "resources" / "alpine-desktop-center.svg"
 
 
 class Backend:
@@ -204,6 +206,8 @@ def main() -> int:
     app = QApplication([])
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
+    if ICON_PATH.is_file():
+        app.setWindowIcon(QIcon(str(ICON_PATH)))
     window = MainWindow()
     window.show()
     return app.exec()

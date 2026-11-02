@@ -12,3 +12,4 @@
 - Added a dedicated path-resolving launcher for KDE file-manager execution.
 - Added an extensionless executable `Alpine Desktop Center` for reliable two-click portable execution.
 - Added a dedicated Alpine mountain and configuration SVG icon.
+- Refined the mark and added a horizontal wordmark inspired by the Roku visual language.

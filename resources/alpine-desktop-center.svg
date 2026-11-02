@@ -1,22 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
   <title id="title">Alpine Desktop Center</title>
-  <desc id="desc">A blue Alpine mountain inside a desktop window with a white configuration spark</desc>
+  <desc id="desc">Faceted alpine peak inside an electric blue orbital core</desc>
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1976d2"/>
-      <stop offset="1" stop-color="#0d47a1"/>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07162d"/>
+      <stop offset="1" stop-color="#0c2446"/>
     </linearGradient>
-    <linearGradient id="mountain" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#e3f2fd"/>
-      <stop offset="1" stop-color="#90caf9"/>
+    <radialGradient id="core" cx="38%" cy="30%" r="78%">
+      <stop offset="0" stop-color="#4b83ff"/>
+      <stop offset="0.55" stop-color="#255bd4"/>
+      <stop offset="1" stop-color="#123a9e"/>
+    </radialGradient>
+    <linearGradient id="peak" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dce8ff"/>
+      <stop offset="0.42" stop-color="#8eafff"/>
+      <stop offset="1" stop-color="#4b74df"/>
     </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.12 0 0 0 0 0.35 0 0 0 0 1 0 0 0 .55 0"/>
+    </filter>
   </defs>
-  <rect x="18" y="18" width="220" height="220" rx="42" fill="url(#sky)"/>
-  <path d="M35 198 94 92l32 52 24-35 71 89H35Z" fill="url(#mountain)"/>
-  <path d="m94 92 14 23-10 10-12-13Z" fill="#fff" opacity=".95"/>
-  <path d="m150 109 19 24-13 11-17-20Z" fill="#fff" opacity=".9"/>
-  <circle cx="57" cy="56" r="7" fill="#bbdefb"/>
-  <circle cx="78" cy="56" r="7" fill="#bbdefb"/>
-  <circle cx="99" cy="56" r="7" fill="#bbdefb"/>
-  <path d="M177 143v17h17v11h-17v17h-11v-17h-17v-11h17v-17h11Z" fill="#fff"/>
+  <rect x="10" y="10" width="236" height="236" rx="58" fill="url(#background)"/>
+  <circle cx="128" cy="128" r="67" fill="#2f6df4" opacity=".35" filter="url(#glow)"/>
+  <g fill="none" stroke="#668ee8" stroke-width="1.4" opacity=".34">
+    <ellipse cx="128" cy="128" rx="93" ry="54" transform="rotate(-32 128 128)"/>
+    <ellipse cx="128" cy="128" rx="91" ry="54" transform="rotate(32 128 128)"/>
+    <ellipse cx="128" cy="128" rx="82" ry="36" transform="rotate(90 128 128)"/>
+  </g>
+  <circle cx="128" cy="128" r="59" fill="url(#core)"/>
+  <path d="M88 166 126 92l17 31 13-22 31 65H88Z" fill="url(#peak)"/>
+  <path d="m126 92 9 18-8 8-10-11Z" fill="#fff" opacity=".95"/>
+  <path d="m143 123 13-22 10 22-13 12Z" fill="#3158ba" opacity=".9"/>
+  <path d="m126 92 17 31-13 10-15-26Z" fill="#b9ceff" opacity=".7"/>
+  <circle cx="128" cy="128" r="59" fill="none" stroke="#77a0ff" stroke-width="1" opacity=".55"/>
 </svg>

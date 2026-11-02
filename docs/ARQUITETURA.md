@@ -59,3 +59,8 @@ módulo não estiver presente, ele oferece a instalação do pacote oficial
 
 A instalação opcional copia o ícone SVG próprio para o tema de ícones do
 usuário e usa o nome `alpine-desktop-center` na entrada do KDE.
+
+A identidade visual do frontend usa azul-marinho profundo, gradientes azuis,
+geometria facetada e órbitas finas. Esses elementos foram inspirados na
+linguagem visual do site institucional da Roku, sem reutilizar o símbolo ou a
+marca da empresa.
