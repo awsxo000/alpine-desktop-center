@@ -22,6 +22,8 @@ ações globais antes que qualquer processo seja iniciado.
 |---|---|
 | Apply Full Configuration | `make aplicar` — saída compacta |
 | Apply Full Configuration with Diagnostics | `make diagnostico` — execução detalhada |
+| Update Nix Channel | `make atualizar-canal-nix` — atualiza os canais configurados |
+| Update Nix Apps | `make atualizar-aplicativos-nix` — atualiza o perfil do usuário |
 | Refresh Nix Apps | `~/.local/bin/atualizar-aplicativos-nix.sh` |
 
 ## Módulos

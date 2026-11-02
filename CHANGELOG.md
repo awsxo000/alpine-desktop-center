@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.29
+
+- Adds separate **Update Nix Channel** and **Update Nix Apps** actions.
+- Keeps Nix updates at user level, without running Ansible roles or changing Alpine packages.
+
 ## 0.1.0-alpha.28
 
 - Fixes runtime state creation so `.alpine-state` is consistently placed at the release root.

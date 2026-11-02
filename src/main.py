@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.28"
+APP_VERSION = "0.1.0-alpha.29"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -128,6 +128,10 @@ class Backend:
             return ["make", "aplicar"]
         if action == "diagnostics":
             return ["make", "diagnostico"]
+        if action == "update_channel":
+            return ["make", "atualizar-canal-nix"]
+        if action == "update_apps":
+            return ["make", "atualizar-aplicativos-nix"]
         if action == "refresh":
             names = (
                 "atualizar-aplicativos-nix.sh",
@@ -233,12 +237,14 @@ class MainWindow(QMainWindow):
         actions = QGroupBox("Global actions")
         action_layout = QHBoxLayout(actions)
         self.apply_button = self._button("Apply Full Configuration", "apply")
+        self.update_channel_button = self._button("Update Nix Channel", "update_channel")
+        self.update_apps_button = self._button("Update Nix Apps", "update_apps")
         self.refresh_button = self._button("Refresh Nix Apps", "refresh")
         self.diagnostics_button = self._button("Apply Full Configuration with Diagnostics", "diagnostics")
         self.check_all_button = QPushButton("Check All Modules")
         self.check_all_button.setMinimumHeight(42)
         self.check_all_button.clicked.connect(self._check_all_modules)
-        for button in (self.apply_button, self.refresh_button, self.diagnostics_button, self.check_all_button):
+        for button in (self.apply_button, self.update_channel_button, self.update_apps_button, self.refresh_button, self.diagnostics_button, self.check_all_button):
             action_layout.addWidget(button)
         layout.addWidget(actions)
 
@@ -534,12 +540,14 @@ class MainWindow(QMainWindow):
         if command is None:
             QMessageBox.warning(self, APP_NAME, "This action is not available. Check the backend installation.")
             return
-        if action in ("apply", "diagnostics"):
-            message = (
-                "Apply the complete Alpine Desktop configuration now?"
-                if action == "apply"
-                else "Apply the complete Alpine Desktop configuration with detailed diagnostics?"
-            )
+        if action in ("apply", "diagnostics", "update_channel", "update_apps"):
+            messages = {
+                "apply": "Apply the complete Alpine Desktop configuration now?",
+                "diagnostics": "Apply the complete Alpine Desktop configuration with detailed diagnostics?",
+                "update_channel": "Update the configured Nix channels now?",
+                "update_apps": "Update all applications installed in the Nix user profile now?",
+            }
+            message = messages[action]
             answer = QMessageBox.question(self, APP_NAME, message)
             if answer != QMessageBox.StandardButton.Yes:
                 return
@@ -680,6 +688,8 @@ class MainWindow(QMainWindow):
     def _set_actions_enabled(self, enabled: bool) -> None:
         available = enabled and self.backend.available and self.backend.valid
         self.apply_button.setEnabled(available)
+        self.update_channel_button.setEnabled(available)
+        self.update_apps_button.setEnabled(available)
         self.refresh_button.setEnabled(available)
         self.diagnostics_button.setEnabled(available)
         self.check_all_button.setEnabled(available)
