@@ -27,6 +27,8 @@ In the Modules tab, `Check Status` shows the current live result, while
 Folder` opens the selected module directory in the file manager. Each module
 directory contains `execution.log` and one timestamped JSON file per status check
 under `diagnostics/`. Each release starts with a fresh log namespace.
+The history view provides a selectable list for each saved check and the
+Ansible execution log; the folder action is available there as an icon.
 
 The application opens as a normal KDE desktop application. It does not execute
 arbitrary commands typed into the interface. Backend output is shown in the

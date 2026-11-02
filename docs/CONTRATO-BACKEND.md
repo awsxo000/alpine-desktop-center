@@ -48,8 +48,9 @@ A interface mostra o log global na aba **Overview**. Na aba **Modules**, o
 botão **Check Status** atualiza uma fotografia atual do estado do módulo, sem
 substituir os arquivos históricos. O botão **View Module Log** mostra primeiro
 o registro salvo mais recente, depois o log de execução e todos os arquivos de
-diagnóstico anteriores. **Open Module Log Folder** abre diretamente a pasta do módulo
-selecionado no gerenciador de arquivos.
+diagnóstico anteriores em uma lista selecionável, com separadores por ponto. O
+acesso à pasta fica dentro desse histórico, no botão com ícone de pasta, que
+abre diretamente a pasta do módulo selecionado no gerenciador de arquivos.
 
 ## Diagnóstico de integridade
 

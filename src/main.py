@@ -27,13 +27,15 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QPlainTextEdit,
+    QToolButton,
+    QStyle,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.21"
+APP_VERSION = "0.1.0-alpha.22"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -299,12 +301,10 @@ class MainWindow(QMainWindow):
         self.module_apply_button = QPushButton("Apply Module")
         self.module_check_button = QPushButton("Check Status")
         self.module_log_button = QPushButton("View Module Log")
-        self.module_folder_button = QPushButton("Open Module Log Folder")
         self.module_apply_button.clicked.connect(self._apply_selected_module)
         self.module_check_button.clicked.connect(self._check_selected_module)
         self.module_log_button.clicked.connect(self._view_selected_log)
-        self.module_folder_button.clicked.connect(self._open_log_folder)
-        for button in (self.module_apply_button, self.module_check_button, self.module_log_button, self.module_folder_button):
+        for button in (self.module_apply_button, self.module_check_button, self.module_log_button):
             button.setMinimumHeight(38)
             buttons.addWidget(button)
         details.addLayout(buttons)
@@ -315,10 +315,25 @@ class MainWindow(QMainWindow):
         self.module_current_status.setPlaceholderText("Click Check Status to inspect the module as it is now.")
         details.addWidget(self.module_current_status)
 
-        details.addWidget(QLabel("Module history"))
+        history_header = QHBoxLayout()
+        history_header.addWidget(QLabel("Module history"))
+        history_header.addStretch(1)
+        self.module_folder_button = QToolButton()
+        self.module_folder_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
+        self.module_folder_button.setToolTip("Open this module's log folder")
+        self.module_folder_button.setAccessibleName("Open module log folder")
+        self.module_folder_button.clicked.connect(self._open_log_folder)
+        history_header.addWidget(self.module_folder_button)
+        details.addLayout(history_header)
+
+        self.module_history_list = QListWidget()
+        self.module_history_list.setMaximumHeight(130)
+        self.module_history_list.currentRowChanged.connect(self._history_selected)
+        details.addWidget(self.module_history_list)
+
         self.module_log = QPlainTextEdit()
         self.module_log.setReadOnly(True)
-        self.module_log.setPlaceholderText("Click View Module Log to open the most recent saved record and historical logs.")
+        self.module_log.setPlaceholderText("Click View Module Log to load the saved history.")
         details.addWidget(self.module_log, 1)
         layout.addLayout(details, 1)
         self.module_apply_button.setEnabled(False)
@@ -355,6 +370,7 @@ class MainWindow(QMainWindow):
         self.module_log_button.setEnabled(True)
         self.module_folder_button.setEnabled(True)
         self.module_current_status.clear()
+        self.module_history_list.clear()
         self.module_log.clear()
 
     def _selected_module(self) -> ModuleSpec | None:
@@ -398,28 +414,37 @@ class MainWindow(QMainWindow):
         execution = path.read_text(errors="replace") if path.is_file() else "No Ansible execution log recorded for this module yet."
         diagnostic_dir = self.backend.diagnostic_log_dir(module.key)
         diagnostic_files = sorted(diagnostic_dir.glob("*.json")) if diagnostic_dir.is_dir() else []
-        latest = None
+        self._history_entries = []
+        self.module_history_list.blockSignals(True)
+        self.module_history_list.clear()
         for diagnostic_path in reversed(diagnostic_files):
             try:
-                candidate = json.loads(diagnostic_path.read_text(errors="replace"))
+                report = json.loads(diagnostic_path.read_text(errors="replace"))
             except (OSError, json.JSONDecodeError):
                 continue
-            if isinstance(candidate, dict):
-                latest = candidate
-                break
-        latest_text = self._format_diagnostic(latest) if latest else "No diagnostic history recorded for this module yet."
-        history_parts = []
-        for diagnostic_path in reversed(diagnostic_files):
-            try:
-                history_parts.append(f"--- {diagnostic_path.name} ---\n{diagnostic_path.read_text(errors='replace')}")
-            except OSError:
+            if not isinstance(report, dict):
                 continue
-        history = "\n".join(history_parts) if history_parts else "No diagnostic history recorded for this module yet."
-        self.module_log.setPlainText(
-            f"=== Latest saved diagnostic ===\n{latest_text}\n\n"
-            f"=== Ansible execution log ===\n{execution}\n\n"
-            f"=== Full diagnostic history (JSONL) ===\n{history}"
-        )
+            checked_at = str(report.get("checked_at", diagnostic_path.stem))
+            self._history_entries.append(("diagnostic", diagnostic_path, report))
+            self.module_history_list.addItem(f"• Check Status — {checked_at}")
+        if path.is_file():
+            self._history_entries.append(("execution", path, execution))
+            self.module_history_list.addItem("• Ansible execution.log")
+        self.module_history_list.blockSignals(False)
+        if self._history_entries:
+            self.module_history_list.setCurrentRow(0)
+        else:
+            self.module_log.setPlainText("No saved logs for this module yet.")
+
+    def _history_selected(self, row: int) -> None:
+        entries = getattr(self, "_history_entries", [])
+        if not 0 <= row < len(entries):
+            return
+        kind, _path, payload = entries[row]
+        if kind == "diagnostic" and isinstance(payload, dict):
+            self.module_log.setPlainText(self._format_diagnostic(payload))
+        else:
+            self.module_log.setPlainText(str(payload))
 
     def _open_log_folder(self) -> None:
         module = self._selected_module()

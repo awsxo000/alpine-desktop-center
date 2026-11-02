@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.22
+
+- Made `View Module Log` the single entry point for module history.
+- Added a separated, selectable list of saved checks and Ansible execution log.
+- Moved folder access into the history header with a folder icon button.
+
 ## 0.1.0-alpha.21
 
 - Starts a fresh log namespace for every frontend release.
