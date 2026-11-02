@@ -11,3 +11,4 @@
 - Added PySide6 detection and optional installation of Alpine's `py3-pyside6` package.
 - Added a dedicated path-resolving launcher for KDE file-manager execution.
 - Added an extensionless executable `Alpine Desktop Center` for reliable two-click portable execution.
+- Added a dedicated Alpine mountain and configuration SVG icon.

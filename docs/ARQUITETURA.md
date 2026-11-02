@@ -56,3 +56,6 @@ principal, pois não depende do parser de comandos do formato `.desktop`.
 Na primeira abertura, o launcher verifica `PySide6`. Em Alpine 3.24, se o
 módulo não estiver presente, ele oferece a instalação do pacote oficial
 `py3-pyside6` por meio do `apk`, antes de iniciar a interface.
+
+A instalação opcional copia o ícone SVG próprio para o tema de ícones do
+usuário e usa o nome `alpine-desktop-center` na entrada do KDE.

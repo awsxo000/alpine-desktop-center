@@ -20,6 +20,10 @@ arbitrary commands typed into the interface. Backend output is shown in the
 activity log so the terminal remains optional, but it is still available for
 recovery and advanced use.
 
+The project includes its own Alpine mountain and desktop configuration icon.
+The optional installation flow places it in the user's KDE icon theme instead
+of using a generic Wayland or computer icon.
+
 ## Development setup
 
 The alpha uses Python and PySide6. On Alpine 3.24, the launcher detects the
