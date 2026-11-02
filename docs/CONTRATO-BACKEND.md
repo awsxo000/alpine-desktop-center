@@ -36,6 +36,9 @@ responsabilidade do frontend. Cada módulo possui sua própria pasta:
 ~/.local/state/alpine-desktop-center/logs/<modulo>/diagnostics.jsonl
 ```
 
+Essa é a estrutura oficial e exclusiva do contrato atual; arquivos planos
+antigos na raiz de `logs/` não são importados nem exibidos.
+
 A interface mostra o log global na aba **Overview**. Na aba **Modules**, o
 botão **Check Status** atualiza uma fotografia atual do estado do módulo, sem
 substituir os arquivos históricos. O botão **View Module Log** mostra primeiro

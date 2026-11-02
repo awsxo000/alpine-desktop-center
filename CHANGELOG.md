@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.20
+
+- Removed fallback support for flat logs from pre-alpha.19 releases.
+- The log contract now uses only `logs/<module>/execution.log` and `logs/<module>/diagnostics.jsonl`.
+
 ## 0.1.0-alpha.19
 
 - Organized module history under `logs/<module>/`.
