@@ -9,11 +9,19 @@ always be executed directly from the terminal.
 
 ## Alpha scope
 
-The first alpha provides three fixed actions:
+The modular alpha provides global actions and a dedicated **Modules** area.
+The available roles are `base`, `nix`, `steam`, `nix_opengl`, `rede`,
+`bluetooth`, `audio`, `swap`, `energia`, `fontes` and `kde`. For each role, the
+interface can check a fixed system signal, apply the Ansible tag independently
+and open its persisted log.
+
+Global actions remain available:
 
 - **Apply Desktop Configuration** — runs `sh instalar.sh`;
 - **Refresh Nix Apps** — runs the installed `Refresh Nix Apps` utility when available;
 - **Run Diagnostics** — runs `make diagnostico`.
+
+Module logs are stored under `~/.local/state/alpine-desktop-center/logs/`.
 
 The application opens as a normal KDE desktop application. It does not execute
 arbitrary commands typed into the interface. Backend output is shown in the

@@ -64,3 +64,13 @@ A identidade visual do frontend usa azul-marinho profundo, gradientes azuis,
 geometria facetada e órbitas finas. Esses elementos foram inspirados na
 linguagem visual do site institucional da Roku, sem reutilizar o símbolo ou a
 marca da empresa.
+
+## Interface modular
+
+A aba **Overview** mantém as operações globais. A aba **Modules** representa as
+roles do backend e permite verificar um sinal operacional, executar somente a
+tag Ansible correspondente e consultar o log persistente daquela role.
+
+Os logs individuais ficam em `~/.local/state/alpine-desktop-center/logs/`.
+Essa camada é uma visualização e um controlador seguro; ela não duplica as
+tarefas das roles nem cria uma segunda fonte de configuração.

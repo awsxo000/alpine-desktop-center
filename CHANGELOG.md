@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.11
+
+- Added Overview and Modules tabs.
+- Added per-role status checks, isolated Ansible execution and persisted logs.
+- Added module summary for the stable backend roles.
+
 ## 0.1.0-alpha.1 — 2026-11-02
 
 - Initial KDE desktop frontend prototype.
