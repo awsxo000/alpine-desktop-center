@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.25
+
+- Revalidates the embedded backend immediately before every backend operation.
+- Blocks `Check Status` if a backend file is deleted or modified after startup.
+- Re-locks all execution actions as soon as an integrity check fails.
+
 ## 0.1.0-alpha.24
 
 - Stores all logs inside the project/release directory under `./logs/`.

@@ -100,7 +100,9 @@ The package also contains `BACKEND-MANIFEST.sha256`. On startup, and whenever
 `Validate Backend` is clicked, the application checks the embedded backend's
 required files and checksums. If the backend is missing or modified, all
 backend-executing actions remain locked; only validation and local history
-viewing remain available.
+viewing remain available. The integrity check is repeated immediately before
+every backend action, so deleting a file after startup cannot allow `Check
+Status` or an Ansible operation to run.
 
 ## Portable two-click mode
 

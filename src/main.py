@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.24"
+APP_VERSION = "0.1.0-alpha.25"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -421,6 +421,19 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, APP_NAME, f"Backend validation failed.\n\n{self.backend.validation_message}\n\nOnly Validate Backend remains available.")
         self._set_actions_enabled(True)
 
+    def _backend_ready(self) -> bool:
+        """Revalidate immediately before every operation that executes the backend."""
+        valid, message = self.backend.validate()
+        self.backend.valid = valid
+        self.backend.validation_message = message
+        self._update_backend_validation_ui()
+        if valid:
+            return True
+        self._set_actions_enabled(False)
+        self.log.appendPlainText(f"Backend execution blocked: {message}")
+        QMessageBox.critical(self, APP_NAME, f"Backend execution blocked.\n\n{message}\n\nRun Validate Backend after restoring the embedded backend.")
+        return False
+
     def _module_selected(self, row: int) -> None:
         module = MODULES[row] if 0 <= row < len(MODULES) else None
         if not module:
@@ -442,7 +455,7 @@ class MainWindow(QMainWindow):
         return MODULES[row] if 0 <= row < len(MODULES) else None
 
     def _check_all_modules(self) -> None:
-        if not self._idle() or not self.backend.available:
+        if not self._idle() or not self.backend.available or not self._backend_ready():
             return
         self.log.appendPlainText("\nChecking all modules...")
         self._check_queue = list(MODULES)
@@ -457,12 +470,12 @@ class MainWindow(QMainWindow):
 
     def _check_selected_module(self) -> None:
         module = self._selected_module()
-        if module and self._idle():
+        if module and self._idle() and self._backend_ready():
             self._start_process(self.backend.diagnostic_command(module), "check", module)
 
     def _apply_selected_module(self) -> None:
         module = self._selected_module()
-        if not module or not self._idle():
+        if not module or not self._idle() or not self._backend_ready():
             return
         answer = QMessageBox.question(self, APP_NAME, f"Apply the {module.title} module now?")
         if answer == QMessageBox.StandardButton.Yes:
@@ -522,6 +535,8 @@ class MainWindow(QMainWindow):
         if not self._idle():
             QMessageBox.information(self, APP_NAME, "Another action is already running.")
             return
+        if not self._backend_ready():
+            return
         command = self.backend.command(action)
         if command is None:
             QMessageBox.warning(self, APP_NAME, "This action is not available. Check the backend installation.")
@@ -538,6 +553,8 @@ class MainWindow(QMainWindow):
         self._start_process(command, action, None)
 
     def _start_process(self, command: list[str], purpose: str, module: ModuleSpec | None) -> None:
+        if not self._backend_ready():
+            return
         self.active_purpose = purpose
         self.active_module = module
         self.active_output = ""

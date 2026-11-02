@@ -11,6 +11,11 @@ estrutura e os hashes SHA-256 de todos os arquivos embutidos usando
 o backend estiver ausente, incompleto ou alterado, aplicação, diagnóstico e
 ações globais permanecem bloqueados até a validação passar.
 
+A validação não é apenas inicial: ela é repetida imediatamente antes de cada
+operação que executaria o backend. Portanto, apagar ou alterar um arquivo após
+a abertura da aplicação também bloqueia `Check Status`, `Apply Module` e as
+ações globais antes que qualquer processo seja iniciado.
+
 ## Ações globais
 
 | Ação | Comando fixo |
