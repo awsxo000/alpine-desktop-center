@@ -1,10 +1,17 @@
 # Changelog
 
+## 0.1.0-alpha.13
+
+- Preserved native Qt/Plasma controls instead of restyling buttons and tabs.
+- Added complete light/dark palettes with readable log and placeholder text.
+- Kept the Roku-inspired identity in colors, alignment and hierarchy.
+
 ## 0.1.0-alpha.12
 
 - Added Roku-inspired dark and light themes.
 - Added centered branded header with persistent theme preference.
-- Refined tabs, cards, lists, buttons and module details with the navy/electric-blue palette.
+- Refined tabs, cards, lists, buttons and module details with the navy/electric-blue component styling.
+- Kept native Qt/Plasma control rendering and moved branding to a readable Qt palette.
 
 ## 0.1.0-alpha.11
 

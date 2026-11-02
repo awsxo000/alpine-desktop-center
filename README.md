@@ -41,7 +41,9 @@ for the horizontal wordmark.
 
 The interface opens in the Roku-inspired dark theme by default and includes a
 `Light theme` / `Dark theme` control in the header. The selected theme is saved
-for the next launch.
+for the next launch. The application keeps the active Qt/Plasma style for
+buttons, tabs, lists, focus rings and hover behavior; only the palette,
+hierarchy and spacing are branded.
 
 ## Development setup
 

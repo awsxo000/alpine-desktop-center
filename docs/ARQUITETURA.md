@@ -86,3 +86,11 @@ O cabeçalho centraliza o nome e a descrição do produto, exibe o símbolo da
 marca e mantém o controle de tema à direita. A composição foi inspirada na
 linguagem visual institucional da Roku: profundidade, contraste, gradientes e
 linhas orbitais, com uma marca própria para o Alpine Desktop Center.
+
+## Qt e Plasma
+
+A identidade visual não substitui o estilo ativo do desktop. O frontend aplica
+uma `QPalette` clara ou escura para cores de fundo, texto, seleção, foco e logs,
+mas mantém o estilo Qt/Plasma responsável pelo desenho e comportamento de
+botões, abas, listas, hover e estados desabilitados. Isso preserva a integração
+visual com o KDE enquanto corrige contraste e hierarquia.

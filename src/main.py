@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from PySide6.QtCore import QProcess, QSettings, QTimer, Qt
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 from PySide6.QtWidgets import (
     QApplication,
     QFormLayout,
@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.12"
+APP_VERSION = "0.1.0-alpha.13"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ICON_PATH = PROJECT_ROOT / "resources" / "alpine-desktop-center.svg"
 
@@ -219,23 +219,33 @@ class MainWindow(QMainWindow):
                 "accent_hover": "#1d4fb6", "border": "#c5d5ec", "selection": "#dce9ff",
             }
             self.theme_button.setText("Dark theme")
+        palette = QPalette()
+        palette.setColor(QPalette.ColorRole.Window, QColor(colors["bg"]))
+        palette.setColor(QPalette.ColorRole.WindowText, QColor(colors["text"]))
+        palette.setColor(QPalette.ColorRole.Base, QColor(colors["surface"]))
+        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(colors["raised"]))
+        palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(colors["surface"]))
+        palette.setColor(QPalette.ColorRole.ToolTipText, QColor(colors["text"]))
+        palette.setColor(QPalette.ColorRole.Text, QColor(colors["text"]))
+        palette.setColor(QPalette.ColorRole.Button, QColor(colors["raised"]))
+        palette.setColor(QPalette.ColorRole.ButtonText, QColor(colors["text"]))
+        palette.setColor(QPalette.ColorRole.BrightText, QColor("#ffffff"))
+        palette.setColor(QPalette.ColorRole.Highlight, QColor(colors["selection"]))
+        palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#ffffff" if dark else colors["text"]))
+        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor(colors["muted"]))
+        palette.setColor(QPalette.ColorRole.Link, QColor(colors["accent_hover"]))
+        palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText, QColor(colors["muted"]))
+        palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(colors["muted"]))
+        palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(colors["muted"]))
+        QApplication.instance().setPalette(palette)
+
+        # Keep the active KDE/Qt style responsible for buttons, tabs, lists,
+        # focus rings and hover behavior. Only the brand colors and hierarchy
+        # are customized here.
         self.setStyleSheet(f"""
-            QMainWindow, QWidget#Root {{ background: {colors['bg']}; color: {colors['text']}; }}
+            QWidget#Root {{ background: {colors['bg']}; }}
             QLabel#Title {{ color: {colors['text']}; letter-spacing: 1px; }}
             QLabel#Subtitle {{ color: {colors['muted']}; }}
-            QGroupBox {{ background: {colors['surface']}; border: 1px solid {colors['border']}; border-radius: 12px; margin-top: 12px; padding: 14px; font-weight: 600; }}
-            QGroupBox::title {{ subcontrol-origin: margin; left: 16px; padding: 0 6px; color: {colors['accent']}; }}
-            QTabWidget::pane {{ border: 1px solid {colors['border']}; border-radius: 10px; background: {colors['surface']}; }}
-            QTabBar::tab {{ background: {colors['raised']}; color: {colors['muted']}; padding: 10px 22px; margin-right: 4px; border-radius: 7px; }}
-            QTabBar::tab:selected {{ background: {colors['accent']}; color: #ffffff; }}
-            QListWidget, QPlainTextEdit {{ background: {colors['surface']}; color: {colors['text']}; border: 1px solid {colors['border']}; border-radius: 9px; padding: 8px; }}
-            QListWidget::item {{ padding: 10px 8px; border-radius: 6px; color: {colors['text']}; }}
-            QListWidget::item:selected {{ background: {colors['selection']}; color: {colors['text']}; }}
-            QPushButton {{ background: {colors['accent']}; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 600; }}
-            QPushButton:hover {{ background: {colors['accent_hover']}; }}
-            QPushButton:disabled {{ background: {colors['raised']}; color: {colors['muted']}; }}
-            QPushButton#ThemeButton {{ background: transparent; color: {colors['accent']}; border: 1px solid {colors['accent']}; }}
-            QPushButton#ThemeButton:hover {{ background: {colors['selection']}; }}
         """)
 
     def _toggle_theme(self) -> None:
