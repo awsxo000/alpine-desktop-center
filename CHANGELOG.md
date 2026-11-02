@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.18
+
+- Separated the live module status view from saved execution and diagnostic history.
+- `Check Status` now updates the current-state panel without replacing historical logs.
+- `View Module Log` opens the latest saved record first and keeps the full JSONL history available.
+- Added `Open Log Folder` to launch the file manager at the module log directory.
+
 ## 0.1.0-alpha.17
 
 - Uses backend v1.37 with corrected PipeWire session diagnostics.

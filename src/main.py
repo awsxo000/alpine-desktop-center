@@ -13,7 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from PySide6.QtCore import QProcess, QSettings, QTimer, Qt
-from PySide6.QtGui import QColor, QFont, QIcon, QPalette
+from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPalette
+from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (
     QApplication,
     QFormLayout,
@@ -32,7 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.17"
+APP_VERSION = "0.1.0-alpha.18"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -125,6 +126,9 @@ class Backend:
 
     def diagnostic_log_path(self, module_key: str) -> Path:
         return self.log_dir / f"{module_key}-diagnostics.jsonl"
+
+    def log_directory(self) -> Path:
+        return self.log_dir
 
 
 class MainWindow(QMainWindow):
@@ -295,23 +299,32 @@ class MainWindow(QMainWindow):
         self.module_apply_button = QPushButton("Apply Module")
         self.module_check_button = QPushButton("Check Status")
         self.module_log_button = QPushButton("View Module Log")
+        self.module_folder_button = QPushButton("Open Log Folder")
         self.module_apply_button.clicked.connect(self._apply_selected_module)
         self.module_check_button.clicked.connect(self._check_selected_module)
         self.module_log_button.clicked.connect(self._view_selected_log)
-        for button in (self.module_apply_button, self.module_check_button, self.module_log_button):
+        self.module_folder_button.clicked.connect(self._open_log_folder)
+        for button in (self.module_apply_button, self.module_check_button, self.module_log_button, self.module_folder_button):
             button.setMinimumHeight(38)
             buttons.addWidget(button)
         details.addLayout(buttons)
 
-        details.addWidget(QLabel("Selected module log"))
+        details.addWidget(QLabel("Current status (live check)"))
+        self.module_current_status = QPlainTextEdit()
+        self.module_current_status.setReadOnly(True)
+        self.module_current_status.setPlaceholderText("Click Check Status to inspect the module as it is now.")
+        details.addWidget(self.module_current_status)
+
+        details.addWidget(QLabel("Module history"))
         self.module_log = QPlainTextEdit()
         self.module_log.setReadOnly(True)
-        self.module_log.setPlaceholderText("Select a module to view its diagnostic or Ansible execution history.")
+        self.module_log.setPlaceholderText("Click View Module Log to open the most recent saved record and historical logs.")
         details.addWidget(self.module_log, 1)
         layout.addLayout(details, 1)
         self.module_apply_button.setEnabled(False)
         self.module_check_button.setEnabled(False)
         self.module_log_button.setEnabled(False)
+        self.module_folder_button.setEnabled(False)
         return tab
 
     def _button(self, text: str, action: str) -> QPushButton:
@@ -340,7 +353,9 @@ class MainWindow(QMainWindow):
         self.module_apply_button.setEnabled(enabled)
         self.module_check_button.setEnabled(enabled)
         self.module_log_button.setEnabled(True)
-        self._view_selected_log()
+        self.module_folder_button.setEnabled(True)
+        self.module_current_status.clear()
+        self.module_log.clear()
 
     def _selected_module(self) -> ModuleSpec | None:
         row = self.module_list.currentRow()
@@ -382,8 +397,31 @@ class MainWindow(QMainWindow):
         path = self.backend.log_path(module.key)
         diagnostic_path = self.backend.diagnostic_log_path(module.key)
         execution = path.read_text(errors="replace") if path.is_file() else "No Ansible execution log recorded for this module yet."
-        diagnostics = diagnostic_path.read_text(errors="replace") if diagnostic_path.is_file() else "No diagnostic history recorded for this module yet."
-        self.module_log.setPlainText(f"=== Ansible execution log ===\n{execution}\n\n=== Diagnostic history (JSONL) ===\n{diagnostics}")
+        diagnostic_lines = diagnostic_path.read_text(errors="replace").splitlines() if diagnostic_path.is_file() else []
+        latest = None
+        for line in reversed(diagnostic_lines):
+            try:
+                candidate = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(candidate, dict):
+                latest = candidate
+                break
+        latest_text = self._format_diagnostic(latest) if latest else "No diagnostic history recorded for this module yet."
+        history = "\n".join(diagnostic_lines) if diagnostic_lines else "No diagnostic history recorded for this module yet."
+        self.module_log.setPlainText(
+            f"=== Latest saved diagnostic ===\n{latest_text}\n\n"
+            f"=== Ansible execution log ===\n{execution}\n\n"
+            f"=== Full diagnostic history (JSONL) ===\n{history}"
+        )
+
+    def _open_log_folder(self) -> None:
+        module = self._selected_module()
+        if not module:
+            return
+        folder = self.backend.log_directory()
+        folder.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
     def _run_action(self, action: str) -> None:
         if not self._idle():
@@ -480,7 +518,8 @@ class MainWindow(QMainWindow):
         self.statuses[module.key] = status
         self._update_module_row(module)
         self.module_status.setText(f"Status: {status}")
-        self.module_log.setPlainText(self._format_diagnostic(report))
+        if self._selected_module() and self._selected_module().key == module.key:
+            self.module_current_status.setPlainText(self._format_diagnostic(report))
         path = self.backend.diagnostic_log_path(module.key)
         self._append_log(path, json.dumps(report, ensure_ascii=False, separators=(",", ":")) + "\n")
         self.log.appendPlainText(f"{module.title}: {status}.")
@@ -541,6 +580,7 @@ class MainWindow(QMainWindow):
         self.module_apply_button.setEnabled(available and module is not None)
         self.module_check_button.setEnabled(available and module is not None)
         self.module_log_button.setEnabled(module is not None)
+        self.module_folder_button.setEnabled(module is not None)
 
 
 def main() -> int:

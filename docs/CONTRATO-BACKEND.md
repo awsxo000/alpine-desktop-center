@@ -34,8 +34,11 @@ Cada execução de módulo é registrada em:
 ~/.local/state/alpine-desktop-center/logs/<modulo>.log
 ```
 
-A interface mostra o log global na aba **Overview** e permite abrir o log
-individual pela ação **View Module Log**.
+A interface mostra o log global na aba **Overview**. Na aba **Modules**, o
+botão **Check Status** atualiza uma fotografia atual do estado do módulo, sem
+substituir os arquivos históricos. O botão **View Module Log** mostra primeiro
+o registro salvo mais recente e, depois, o log de execução e o histórico JSONL
+completo. **Open Log Folder** abre essa pasta no gerenciador de arquivos.
 
 ## Diagnóstico de integridade
 
@@ -57,4 +60,6 @@ frontend apenas apresenta o resultado e grava uma cópia em:
 
 O arquivo `<modulo>.log` permanece reservado à saída de aplicações reais do
 Ansible. Verificações não são adicionadas a esse log, evitando comandos
-repetidos e mantendo separados diagnóstico e alteração do sistema.
+repetidos e mantendo separados diagnóstico e alteração do sistema. O status
+atual exibido na interface é efêmero; o histórico persistido continua nos
+arquivos `.log` e `-diagnostics.jsonl`.

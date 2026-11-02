@@ -22,6 +22,9 @@ Global actions remain available:
 - **Apply Full Configuration with Diagnostics** — runs `make diagnostico` with detailed Ansible output.
 
 Module logs are stored under `~/.local/state/alpine-desktop-center/logs/`.
+In the Modules tab, `Check Status` shows the current live result, while
+`View Module Log` displays the latest saved record and older history. `Open Log
+Folder` opens the same directory in the file manager.
 
 The application opens as a normal KDE desktop application. It does not execute
 arbitrary commands typed into the interface. Backend output is shown in the
@@ -78,7 +81,7 @@ Release packages from `0.1.0-alpha.16` onward are self-contained and use only th
 backend bundled in the package. Their layout is intentionally simple:
 
 ```text
-Alpine-Desktop-Center-v0.1.0-alpha.17/
+Alpine-Desktop-Center-v0.1.0-alpha.18/
 ├── Alpine Desktop Center
 ├── frontend/
 ├── backend/
@@ -113,8 +116,8 @@ do not copy only the frontend executable:
 
 ```sh
 mkdir -p ~/.local/opt ~/.local/bin
-cp -R Alpine-Desktop-Center-v0.1.0-alpha.17 ~/.local/opt/
-ln -sfn "$HOME/.local/opt/Alpine-Desktop-Center-v0.1.0-alpha.17/Alpine Desktop Center" \
+cp -R Alpine-Desktop-Center-v0.1.0-alpha.18 ~/.local/opt/
+ln -sfn "$HOME/.local/opt/Alpine-Desktop-Center-v0.1.0-alpha.18/Alpine Desktop Center" \
   ~/.local/bin/alpine-desktop-center
 ```
 
@@ -137,5 +140,5 @@ the fixed frontend/backend operations are listed in
 To build a combined release locally, use:
 
 ```sh
-sh scripts/package-release.sh 0.1.0-alpha.17 v1.37
+sh scripts/package-release.sh 0.1.0-alpha.18 v1.37
 ```
