@@ -3,6 +3,14 @@
 A interface usa operações nomeadas e não executa texto arbitrário informado
 pelo usuário. O backend `alpine-desktop` continua sendo a fonte de verdade.
 
+## Validação obrigatória
+
+Antes de liberar operações que executam o backend, a aplicação verifica a
+estrutura e os hashes SHA-256 de todos os arquivos embutidos usando
+`BACKEND-MANIFEST.sha256`. A ação **Validate Backend** é sempre permitida. Se
+o backend estiver ausente, incompleto ou alterado, aplicação, diagnóstico e
+ações globais permanecem bloqueados até a validação passar.
+
 ## Ações globais
 
 | Ação | Comando fixo |

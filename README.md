@@ -96,6 +96,12 @@ Alpine-Desktop-Center-v0.1.0-alpha.18/
 commit and diagnostic schema. The application does not fall back to a backend
 found elsewhere on the machine.
 
+The package also contains `BACKEND-MANIFEST.sha256`. On startup, and whenever
+`Validate Backend` is clicked, the application checks the embedded backend's
+required files and checksums. If the backend is missing or modified, all
+backend-executing actions remain locked; only validation and local history
+viewing remain available.
+
 ## Portable two-click mode
 
 The Release includes an executable named `Alpine Desktop Center` in the

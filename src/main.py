@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import json
+import hashlib
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.22"
+APP_VERSION = "0.1.0-alpha.23"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -74,6 +75,7 @@ class Backend:
         self.path = embedded if (embedded / "Makefile").is_file() else None
         self.log_dir = Path.home() / ".local" / "state" / "alpine-desktop-center" / "logs" / APP_VERSION
         self.version = self._read_version()
+        self.valid, self.validation_message = self.validate()
 
     def _read_version(self) -> str:
         manifest = PACKAGE_ROOT / "RELEASE-VERSIONS"
@@ -87,6 +89,38 @@ class Backend:
     @property
     def available(self) -> bool:
         return self.path is not None
+
+    def validate(self) -> tuple[bool, str]:
+        if not self.path:
+            return False, "Embedded backend directory is missing."
+        required = ("Makefile", "playbooks/site.yml", "scripts/diagnostico-modulo.py")
+        for relative in required:
+            if not (self.path / relative).is_file():
+                return False, f"Required backend file is missing: {relative}"
+        manifest = PACKAGE_ROOT / "BACKEND-MANIFEST.sha256"
+        if not manifest.is_file():
+            return False, "BACKEND-MANIFEST.sha256 is missing."
+        expected: dict[str, str] = {}
+        try:
+            for line in manifest.read_text(errors="strict").splitlines():
+                digest, separator, relative = line.partition("  ")
+                if not separator or len(digest) != 64 or not relative:
+                    return False, "Backend manifest is malformed."
+                expected[relative] = digest
+            actual_files = {
+                str(path.relative_to(self.path))
+                for path in self.path.rglob("*")
+                if path.is_file()
+            }
+            if actual_files != set(expected):
+                return False, "Embedded backend files differ from its manifest."
+            for relative, digest in expected.items():
+                file_digest = hashlib.sha256((self.path / relative).read_bytes()).hexdigest()
+                if file_digest != digest:
+                    return False, f"Backend file checksum mismatch: {relative}"
+        except (OSError, ValueError) as exc:
+            return False, f"Could not validate backend: {exc}"
+        return True, f"Embedded backend {self.version} is intact."
 
     def command(self, action: str, module: ModuleSpec | None = None) -> list[str] | None:
         if not self.path:
@@ -183,8 +217,15 @@ class MainWindow(QMainWindow):
         status_layout = QFormLayout(status_box)
         self.backend_label = QLabel()
         self.version_label = QLabel(f"Frontend: {APP_VERSION}")
+        validation_row = QHBoxLayout()
+        self.backend_validation_label = QLabel()
+        self.validate_backend_button = QPushButton("Validate Backend")
+        self.validate_backend_button.clicked.connect(self._validate_backend)
+        validation_row.addWidget(self.backend_validation_label, 1)
+        validation_row.addWidget(self.validate_backend_button)
         status_layout.addRow("Location", self.backend_label)
         status_layout.addRow("Version", self.version_label)
+        status_layout.addRow("Integrity", validation_row)
         root_layout.addWidget(status_box)
 
         self.tabs = QTabWidget()
@@ -351,11 +392,34 @@ class MainWindow(QMainWindow):
     def _refresh_backend_status(self) -> None:
         if self.backend.available:
             self.backend_label.setText(f"{self.backend.path} ({self.backend.version})")
-            self.log.appendPlainText("Backend detected. Ready for global or modular actions.")
+            self._update_backend_validation_ui()
+            if self.backend.valid:
+                self.log.appendPlainText("Backend detected and validated. Ready for global or modular actions.")
+            else:
+                self.log.appendPlainText(f"Backend validation failed: {self.backend.validation_message}")
+            self._set_actions_enabled(True)
             return
         self.backend_label.setText("Not detected")
+        self.backend_validation_label.setText("Not validated")
         self.log.appendPlainText("Embedded backend not found. Extract the complete release package with its backend/ directory.")
         self._set_actions_enabled(False)
+
+    def _update_backend_validation_ui(self) -> None:
+        if self.backend.valid:
+            self.backend_validation_label.setText("Valid and intact")
+        else:
+            self.backend_validation_label.setText("Blocked: validation failed")
+
+    def _validate_backend(self) -> None:
+        self.backend.valid, self.backend.validation_message = self.backend.validate()
+        self._update_backend_validation_ui()
+        if self.backend.valid:
+            self.log.appendPlainText(f"Backend validation passed: {self.backend.validation_message}")
+            QMessageBox.information(self, APP_NAME, "The embedded backend is valid and intact. Actions are unlocked.")
+        else:
+            self.log.appendPlainText(f"Backend validation failed: {self.backend.validation_message}")
+            QMessageBox.critical(self, APP_NAME, f"Backend validation failed.\n\n{self.backend.validation_message}\n\nOnly Validate Backend remains available.")
+        self._set_actions_enabled(True)
 
     def _module_selected(self, row: int) -> None:
         module = MODULES[row] if 0 <= row < len(MODULES) else None
@@ -604,7 +668,7 @@ class MainWindow(QMainWindow):
         return not self.process or self.process.state() == QProcess.ProcessState.NotRunning
 
     def _set_actions_enabled(self, enabled: bool) -> None:
-        available = enabled and self.backend.available
+        available = enabled and self.backend.available and self.backend.valid
         self.apply_button.setEnabled(available)
         self.refresh_button.setEnabled(available)
         self.diagnostics_button.setEnabled(available)

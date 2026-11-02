@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.23
+
+- Added `Validate Backend` with structural and SHA-256 integrity checks.
+- Blocks backend execution when the embedded backend is missing, incomplete or modified.
+- Keeps validation, local history viewing and folder access available while execution is blocked.
+- Adds `BACKEND-MANIFEST.sha256` to self-contained release packages.
+
 ## 0.1.0-alpha.22
 
 - Made `View Module Log` the single entry point for module history.
