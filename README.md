@@ -22,9 +22,16 @@ recovery and advanced use.
 
 ## Development setup
 
-The alpha uses Python and PySide6. On Alpine, install a Qt/PySide6 package
-available for your release, or use a Nix development environment. A generic
-Python setup is:
+The alpha uses Python and PySide6. On Alpine 3.24, the launcher detects the
+missing module and offers to install the official `py3-pyside6` package from
+the `community` repository. If you prefer to prepare it manually, run:
+
+```sh
+doas apk add py3-pyside6
+```
+
+The package includes the Qt for Python bindings and their Alpine dependencies.
+For development outside the system package, a generic Python setup is:
 
 ```sh
 python3 -m venv .venv

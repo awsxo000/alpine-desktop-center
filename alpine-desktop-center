@@ -2,4 +2,40 @@
 set -eu
 APP_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PYTHON="${ALPINE_DESKTOP_CENTER_PYTHON:-python3}"
+
+has_pyside6() {
+  "$PYTHON" -c 'import PySide6' >/dev/null 2>&1
+}
+
+install_pyside6() {
+  if command -v kdialog >/dev/null 2>&1; then
+    if ! kdialog --yesno "PySide6 is required for Alpine Desktop Center. Install the Alpine package py3-pyside6 now?" --title "Alpine Desktop Center"; then
+      return 1
+    fi
+  fi
+
+  if ! command -v doas >/dev/null 2>&1 || ! command -v apk >/dev/null 2>&1; then
+    return 1
+  fi
+
+  if command -v konsole >/dev/null 2>&1; then
+    konsole -e sh -c 'doas apk add py3-pyside6; status=$?; printf "\nPress Enter to close..."; read -r _; exit "$status"'
+  else
+    doas apk add py3-pyside6
+  fi
+}
+
+if ! has_pyside6; then
+  install_pyside6 || true
+fi
+
+if ! has_pyside6; then
+  if command -v kdialog >/dev/null 2>&1; then
+    kdialog --error "PySide6 is not installed. Run: doas apk add py3-pyside6" --title "Alpine Desktop Center"
+  else
+    printf '%s\n' 'PySide6 is not installed.' 'Run: doas apk add py3-pyside6' >&2
+  fi
+  exit 1
+fi
+
 exec "$PYTHON" "$APP_DIR/src/main.py" "$@"

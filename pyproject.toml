@@ -7,7 +7,10 @@ name = "alpine-desktop-center"
 version = "0.1.0a1"
 description = "A graphical frontend for the alpine-desktop Ansible backend"
 requires-python = ">=3.10"
-dependencies = ["PySide6>=6.6"]
+dependencies = []
+
+[project.optional-dependencies]
+pip = ["PySide6>=6.6"]
 
 [project.scripts]
 alpine-desktop-center = "src.main:main"

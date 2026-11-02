@@ -48,3 +48,7 @@ Além desse modo instalado, cada Release inclui `Alpine Desktop Center.desktop`
 na raiz do diretório. Esse atalho usa a localização do próprio arquivo para
 abrir o launcher ao lado dele, permitindo executar a aplicação diretamente da
 pasta extraída sem instalação global.
+
+Na primeira abertura, o launcher verifica `PySide6`. Em Alpine 3.24, se o
+módulo não estiver presente, ele oferece a instalação do pacote oficial
+`py3-pyside6` por meio do `apk`, antes de iniciar a interface.
