@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.24
+
+- Stores all logs inside the project/release directory under `./logs/`.
+- No longer reads from or writes to `~/.local/state` or other system folders.
+
 ## 0.1.0-alpha.23
 
 - Added `Validate Backend` with structural and SHA-256 integrity checks.

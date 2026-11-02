@@ -40,8 +40,8 @@ O backend executa a operação ou diagnóstico; a persistência do histórico é
 responsabilidade do frontend. Cada módulo possui sua própria pasta:
 
 ```text
-~/.local/state/alpine-desktop-center/logs/<versao-frontend>/<modulo>/execution.log
-~/.local/state/alpine-desktop-center/logs/<versao-frontend>/<modulo>/diagnostics/<data-e-hora>.json
+./logs/<versao-frontend>/<modulo>/execution.log
+./logs/<versao-frontend>/<modulo>/diagnostics/<data-e-hora>.json
 ```
 
 Essa é a estrutura oficial e exclusiva do contrato atual; arquivos planos
@@ -75,7 +75,7 @@ O backend continua sendo a fonte de verdade dos critérios de integridade; o
 frontend apenas apresenta o resultado e grava uma cópia em:
 
 ```text
-~/.local/state/alpine-desktop-center/logs/<versao-frontend>/<modulo>/diagnostics/<data-e-hora>.json
+./logs/<versao-frontend>/<modulo>/diagnostics/<data-e-hora>.json
 ```
 
 O arquivo `execution.log` permanece reservado à saída de aplicações reais do

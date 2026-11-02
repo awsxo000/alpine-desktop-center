@@ -21,7 +21,7 @@ Global actions remain available:
 - **Refresh Nix Apps** — runs the installed `Refresh Nix Apps` utility when available;
 - **Apply Full Configuration with Diagnostics** — runs `make diagnostico` with detailed Ansible output.
 
-Module logs are stored under `~/.local/state/alpine-desktop-center/logs/<frontend-version>/<module>/`.
+Module logs are stored inside the project/release under `./logs/<frontend-version>/<module>/`.
 In the Modules tab, `Check Status` shows the current live result, while
 `View Module Log` displays the latest saved record and older history. `Open Log
 Folder` opens the selected module directory in the file manager. Each module
@@ -55,8 +55,8 @@ hierarchy and spacing are branded.
 Module status checks use the backend's versioned, read-only diagnostic command.
 Each result lists individual components, warnings, failures and known
 dependencies instead of repeating a silent shell predicate. Ansible execution
-logs remain separate from diagnostic history under
-`~/.local/state/alpine-desktop-center/logs/`.
+logs remain separate from diagnostic history under the release's local
+`./logs/` directory.
 
 ## Development setup
 

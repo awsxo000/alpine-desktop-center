@@ -77,7 +77,9 @@ A aba **Overview** mantém as operações globais. A aba **Modules** representa 
 roles do backend e permite verificar um sinal operacional, executar somente a
 tag Ansible correspondente e consultar o log persistente daquela role.
 
-Os logs individuais ficam em `~/.local/state/alpine-desktop-center/logs/`.
+Os logs individuais ficam em `./logs/` dentro da própria pasta do projeto ou
+da release em execução; o frontend não usa a pasta home nem diretórios do
+sistema para persistir esses registros.
 Essa camada é uma visualização e um controlador seguro; ela não duplica as
 tarefas das roles nem cria uma segunda fonte de configuração.
 

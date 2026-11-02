@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.23"
+APP_VERSION = "0.1.0-alpha.24"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -73,7 +73,7 @@ class Backend:
     def __init__(self) -> None:
         embedded = PACKAGE_ROOT / "backend"
         self.path = embedded if (embedded / "Makefile").is_file() else None
-        self.log_dir = Path.home() / ".local" / "state" / "alpine-desktop-center" / "logs" / APP_VERSION
+        self.log_dir = PACKAGE_ROOT / "logs" / APP_VERSION
         self.version = self._read_version()
         self.valid, self.validation_message = self.validate()
 
