@@ -45,6 +45,12 @@ for the next launch. The application keeps the active Qt/Plasma style for
 buttons, tabs, lists, focus rings and hover behavior; only the palette,
 hierarchy and spacing are branded.
 
+Module status checks use the backend's versioned, read-only diagnostic command.
+Each result lists individual components, warnings, failures and known
+dependencies instead of repeating a silent shell predicate. Ansible execution
+logs remain separate from diagnostic history under
+`~/.local/state/alpine-desktop-center/logs/`.
+
 ## Development setup
 
 The alpha uses Python and PySide6. On Alpine 3.24, the launcher detects the

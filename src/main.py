@@ -7,6 +7,7 @@ alpine-desktop repository remains the source of truth for Ansible roles.
 from __future__ import annotations
 
 import os
+import json
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,7 +32,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.14"
+APP_VERSION = "0.1.0-alpha.15"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ICON_PATH = PROJECT_ROOT / "resources" / "alpine-desktop-center.svg"
 
@@ -115,8 +116,14 @@ class Backend:
     def check_command(self, module: ModuleSpec) -> list[str]:
         return list(module.check)
 
+    def diagnostic_command(self, module: ModuleSpec) -> list[str]:
+        return ["make", "diagnostico-modulo", f"MODULO={module.key}"]
+
     def log_path(self, module_key: str) -> Path:
         return self.log_dir / f"{module_key}.log"
+
+    def diagnostic_log_path(self, module_key: str) -> Path:
+        return self.log_dir / f"{module_key}-diagnostics.jsonl"
 
 
 class MainWindow(QMainWindow):
@@ -128,6 +135,7 @@ class MainWindow(QMainWindow):
         self.process: QProcess | None = None
         self.active_purpose = ""
         self.active_module: ModuleSpec | None = None
+        self.active_output = ""
         self.statuses: dict[str, str] = {module.key: "Unknown" for module in MODULES}
         self.setWindowTitle(f"{APP_NAME} — {APP_VERSION}")
         self.setMinimumSize(980, 650)
@@ -297,7 +305,7 @@ class MainWindow(QMainWindow):
         details.addWidget(QLabel("Selected module log"))
         self.module_log = QPlainTextEdit()
         self.module_log.setReadOnly(True)
-        self.module_log.setPlaceholderText("Select View Module Log to load the persisted role log.")
+        self.module_log.setPlaceholderText("Select a module to view its diagnostic or Ansible execution history.")
         details.addWidget(self.module_log, 1)
         layout.addLayout(details, 1)
         self.module_apply_button.setEnabled(False)
@@ -349,12 +357,12 @@ class MainWindow(QMainWindow):
             self._update_summary()
             return
         module = self._check_queue.pop(0)
-        self._start_process(self.backend.check_command(module), "check", module)
+        self._start_process(self.backend.diagnostic_command(module), "check", module)
 
     def _check_selected_module(self) -> None:
         module = self._selected_module()
         if module and self._idle():
-            self._start_process(self.backend.check_command(module), "check", module)
+            self._start_process(self.backend.diagnostic_command(module), "check", module)
 
     def _apply_selected_module(self) -> None:
         module = self._selected_module()
@@ -371,7 +379,10 @@ class MainWindow(QMainWindow):
         if not module:
             return
         path = self.backend.log_path(module.key)
-        self.module_log.setPlainText(path.read_text(errors="replace") if path.is_file() else "No log recorded for this module yet.")
+        diagnostic_path = self.backend.diagnostic_log_path(module.key)
+        execution = path.read_text(errors="replace") if path.is_file() else "No Ansible execution log recorded for this module yet."
+        diagnostics = diagnostic_path.read_text(errors="replace") if diagnostic_path.is_file() else "No diagnostic history recorded for this module yet."
+        self.module_log.setPlainText(f"=== Ansible execution log ===\n{execution}\n\n=== Diagnostic history (JSONL) ===\n{diagnostics}")
 
     def _run_action(self, action: str) -> None:
         if not self._idle():
@@ -395,8 +406,9 @@ class MainWindow(QMainWindow):
     def _start_process(self, command: list[str], purpose: str, module: ModuleSpec | None) -> None:
         self.active_purpose = purpose
         self.active_module = module
+        self.active_output = ""
         self.log.appendPlainText(f"\n$ {' '.join(command)}")
-        if module:
+        if module and purpose == "module":
             self._append_module_log(module, f"\n$ {' '.join(command)}")
         self._set_actions_enabled(False)
         self.process = QProcess(self)
@@ -414,13 +426,16 @@ class MainWindow(QMainWindow):
             return
         text = bytes(self.process.readAllStandardOutput()).decode(errors="replace")
         if text:
+            self.active_output += text
             self.log.insertPlainText(text)
             self.log.ensureCursorVisible()
-            if self.active_module:
+            if self.active_module and self.active_purpose == "module":
                 self._append_module_log(self.active_module, text)
 
     def _append_module_log(self, module: ModuleSpec, text: str) -> None:
-        path = self.backend.log_path(module.key)
+        self._append_log(self.backend.log_path(module.key), text)
+
+    def _append_log(self, path: Path, text: str) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as stream:
             stream.write(text)
@@ -429,10 +444,7 @@ class MainWindow(QMainWindow):
         self._read_output()
         purpose, module = self.active_purpose, self.active_module
         if purpose == "check" and module:
-            self.statuses[module.key] = "Installed / available" if exit_code == 0 else "Not detected"
-            self._update_module_row(module)
-            self.module_status.setText(f"Status: {self.statuses[module.key]}")
-            self.log.appendPlainText(f"{module.title}: {self.statuses[module.key]}.")
+            self._finish_module_diagnostic(module, exit_code)
         else:
             result = "completed successfully" if exit_code == 0 else f"failed with exit code {exit_code}"
             self.log.appendPlainText(f"\nAction {result}.")
@@ -445,9 +457,59 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(150, self._check_next)
         self._update_summary()
 
+    def _finish_module_diagnostic(self, module: ModuleSpec, exit_code: int) -> None:
+        report = None
+        try:
+            start = self.active_output.find("{")
+            report = json.loads(self.active_output[start:]) if start >= 0 else None
+        except json.JSONDecodeError:
+            report = None
+        if not isinstance(report, dict):
+            self.statuses[module.key] = "Diagnostic error"
+            self.module_status.setText("Status: Diagnostic error")
+            self.log.appendPlainText(f"{module.title}: diagnostic output was invalid (exit code {exit_code}).")
+            return
+        status_map = {
+            "complete": "Complete",
+            "partial": "Partially configured",
+            "incomplete": "Incomplete",
+            "unknown": "Unknown",
+        }
+        status = status_map.get(str(report.get("status")), "Unknown")
+        self.statuses[module.key] = status
+        self._update_module_row(module)
+        self.module_status.setText(f"Status: {status}")
+        self.module_log.setPlainText(self._format_diagnostic(report))
+        path = self.backend.diagnostic_log_path(module.key)
+        self._append_log(path, json.dumps(report, ensure_ascii=False, separators=(",", ":")) + "\n")
+        self.log.appendPlainText(f"{module.title}: {status}.")
+
+    def _format_diagnostic(self, report: dict[str, object]) -> str:
+        labels = {"ok": "[OK]", "error": "[ERROR]", "warning": "[WARNING]", "unknown": "[UNKNOWN]"}
+        status = {"complete": "Complete", "partial": "Partially configured", "incomplete": "Incomplete", "unknown": "Unknown"}.get(str(report.get("status")), "Unknown")
+        summary = report.get("summary", {})
+        lines = [
+            f"{report.get('module', 'module').upper()} — {status}",
+            f"Checked at: {report.get('checked_at', 'unknown')}",
+            f"Checks: {summary.get('passed', 0)} passed · {summary.get('failed', 0)} failed · {summary.get('warnings', 0)} warnings · {summary.get('total', 0)} total",
+            "",
+            "Components:",
+        ]
+        for check in report.get("checks", []):
+            if isinstance(check, dict):
+                marker = labels.get(str(check.get("status")), "[?]")
+                lines.append(f"{marker} {check.get('title', check.get('id', 'check'))}: {check.get('message', '')}")
+        dependencies = report.get("dependencies", [])
+        if dependencies:
+            lines.extend(["", "Dependencies:"])
+            for dependency in dependencies:
+                if isinstance(dependency, dict):
+                    lines.append(f"- {dependency.get('module')}: {dependency.get('status')}")
+        return "\n".join(lines)
+
     def _check_module_after_apply(self, module: ModuleSpec) -> None:
         if self._idle():
-            self._start_process(self.backend.check_command(module), "check", module)
+            self._start_process(self.backend.diagnostic_command(module), "check", module)
 
     def _process_error(self, _error: QProcess.ProcessError) -> None:
         self._read_output()

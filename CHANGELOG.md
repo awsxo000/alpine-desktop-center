@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.15
+
+- Replaced one-line module checks with structured, read-only backend diagnostics.
+- Shows complete, partial and incomplete module states with individual component results.
+- Separates Ansible execution logs from JSONL diagnostic history.
+- Adds the versioned backend diagnostic contract to the module documentation.
+
 ## 0.1.0-alpha.14
 
 - Fixed discovery of the backend utility `atualizar-aplicativos-nix.sh`.

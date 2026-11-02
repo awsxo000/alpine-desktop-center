@@ -36,3 +36,25 @@ Cada execução de módulo é registrada em:
 
 A interface mostra o log global na aba **Overview** e permite abrir o log
 individual pela ação **View Module Log**.
+
+## Diagnóstico de integridade
+
+O status do módulo não é mais inferido por uma única verificação silenciosa.
+Quando o backend atualizado está disponível, a interface chama:
+
+```sh
+make diagnostico-modulo MODULO=<modulo>
+```
+
+Essa operação é somente leitura e retorna JSON versionado (`schema_version: 1`)
+com o estado geral, cada componente verificado, avisos, falhas e dependências.
+O backend continua sendo a fonte de verdade dos critérios de integridade; o
+frontend apenas apresenta o resultado e grava uma cópia em:
+
+```text
+~/.local/state/alpine-desktop-center/logs/<modulo>-diagnostics.jsonl
+```
+
+O arquivo `<modulo>.log` permanece reservado à saída de aplicações reais do
+Ansible. Verificações não são adicionadas a esse log, evitando comandos
+repetidos e mantendo separados diagnóstico e alteração do sistema.
