@@ -33,7 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.18"
+APP_VERSION = "0.1.0-alpha.19"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -122,13 +122,19 @@ class Backend:
         return ["make", "diagnostico-modulo", f"MODULO={module.key}"]
 
     def log_path(self, module_key: str) -> Path:
-        return self.log_dir / f"{module_key}.log"
+        return self.log_dir / module_key / "execution.log"
 
     def diagnostic_log_path(self, module_key: str) -> Path:
+        return self.log_dir / module_key / "diagnostics.jsonl"
+
+    def legacy_log_path(self, module_key: str) -> Path:
+        return self.log_dir / f"{module_key}.log"
+
+    def legacy_diagnostic_log_path(self, module_key: str) -> Path:
         return self.log_dir / f"{module_key}-diagnostics.jsonl"
 
-    def log_directory(self) -> Path:
-        return self.log_dir
+    def log_directory(self, module_key: str) -> Path:
+        return self.log_dir / module_key
 
 
 class MainWindow(QMainWindow):
@@ -299,7 +305,7 @@ class MainWindow(QMainWindow):
         self.module_apply_button = QPushButton("Apply Module")
         self.module_check_button = QPushButton("Check Status")
         self.module_log_button = QPushButton("View Module Log")
-        self.module_folder_button = QPushButton("Open Log Folder")
+        self.module_folder_button = QPushButton("Open Module Log Folder")
         self.module_apply_button.clicked.connect(self._apply_selected_module)
         self.module_check_button.clicked.connect(self._check_selected_module)
         self.module_log_button.clicked.connect(self._view_selected_log)
@@ -396,6 +402,10 @@ class MainWindow(QMainWindow):
             return
         path = self.backend.log_path(module.key)
         diagnostic_path = self.backend.diagnostic_log_path(module.key)
+        if not path.is_file():
+            path = self.backend.legacy_log_path(module.key)
+        if not diagnostic_path.is_file():
+            diagnostic_path = self.backend.legacy_diagnostic_log_path(module.key)
         execution = path.read_text(errors="replace") if path.is_file() else "No Ansible execution log recorded for this module yet."
         diagnostic_lines = diagnostic_path.read_text(errors="replace").splitlines() if diagnostic_path.is_file() else []
         latest = None
@@ -419,7 +429,7 @@ class MainWindow(QMainWindow):
         module = self._selected_module()
         if not module:
             return
-        folder = self.backend.log_directory()
+        folder = self.backend.log_directory(module.key)
         folder.mkdir(parents=True, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 

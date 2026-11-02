@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.19
+
+- Organized module history under `logs/<module>/`.
+- Stores Ansible execution output in `execution.log` and diagnostics in `diagnostics.jsonl`.
+- Keeps read compatibility with flat log files created by earlier releases.
+- `Open Module Log Folder` now opens the selected module's directory directly.
+
 ## 0.1.0-alpha.18
 
 - Separated the live module status view from saved execution and diagnostic history.

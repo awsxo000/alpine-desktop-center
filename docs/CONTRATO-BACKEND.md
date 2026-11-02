@@ -28,17 +28,20 @@ o usuário antes de aplicar uma role.
 
 ## Logs
 
-Cada execução de módulo é registrada em:
+O backend executa a operação ou diagnóstico; a persistência do histórico é
+responsabilidade do frontend. Cada módulo possui sua própria pasta:
 
 ```text
-~/.local/state/alpine-desktop-center/logs/<modulo>.log
+~/.local/state/alpine-desktop-center/logs/<modulo>/execution.log
+~/.local/state/alpine-desktop-center/logs/<modulo>/diagnostics.jsonl
 ```
 
 A interface mostra o log global na aba **Overview**. Na aba **Modules**, o
 botão **Check Status** atualiza uma fotografia atual do estado do módulo, sem
 substituir os arquivos históricos. O botão **View Module Log** mostra primeiro
 o registro salvo mais recente e, depois, o log de execução e o histórico JSONL
-completo. **Open Log Folder** abre essa pasta no gerenciador de arquivos.
+completo. **Open Module Log Folder** abre diretamente a pasta do módulo
+selecionado no gerenciador de arquivos.
 
 ## Diagnóstico de integridade
 
@@ -55,11 +58,11 @@ O backend continua sendo a fonte de verdade dos critérios de integridade; o
 frontend apenas apresenta o resultado e grava uma cópia em:
 
 ```text
-~/.local/state/alpine-desktop-center/logs/<modulo>-diagnostics.jsonl
+~/.local/state/alpine-desktop-center/logs/<modulo>/diagnostics.jsonl
 ```
 
-O arquivo `<modulo>.log` permanece reservado à saída de aplicações reais do
+O arquivo `execution.log` permanece reservado à saída de aplicações reais do
 Ansible. Verificações não são adicionadas a esse log, evitando comandos
 repetidos e mantendo separados diagnóstico e alteração do sistema. O status
 atual exibido na interface é efêmero; o histórico persistido continua nos
-arquivos `.log` e `-diagnostics.jsonl`.
+arquivos `execution.log` e `diagnostics.jsonl`.
