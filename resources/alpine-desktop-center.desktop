@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Alpine Desktop Center
+Comment=Manage Alpine Linux desktop configuration
+Exec=alpine-desktop-center
+TryExec=alpine-desktop-center
+Icon=computer
+Terminal=false
+Type=Application
+Categories=Settings;System;
+StartupNotify=true

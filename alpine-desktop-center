@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+APP_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+PYTHON="${ALPINE_DESKTOP_CENTER_PYTHON:-python3}"
+exec "$PYTHON" "$APP_DIR/src/main.py" "$@"

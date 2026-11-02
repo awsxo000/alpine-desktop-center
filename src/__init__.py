@@ -1,0 +1,1 @@
+"""Alpine Desktop Center package."""
