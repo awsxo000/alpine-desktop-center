@@ -50,7 +50,18 @@ export ALPINE_DESKTOP_BACKEND="$HOME/path/to/alpine-desktop"
 ./alpine-desktop-center
 ```
 
-## Two-click installation
+## Portable two-click mode
+
+The Release includes `Alpine Desktop Center.desktop` in the project folder.
+After extracting the Release, open that file with two clicks. It launches the
+portable copy of the application from the same folder and does not require
+installing a desktop entry globally.
+
+KDE may ask you to mark the downloaded `.desktop` file as trusted. Choose
+**Allow Launching** once. The application then opens normally and you can
+choose an action from its window.
+
+## Optional menu installation
 
 Install the launcher and desktop entry into the user profile:
 

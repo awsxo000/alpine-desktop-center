@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Alpine Desktop Center
+Comment=Open Alpine Desktop Center from this folder
+Exec=/bin/sh -c "exec \"$(dirname -- \"$1\")/alpine-desktop-center\"" -- %k
+Icon=computer
+Terminal=false
+Type=Application
+Categories=Settings;System;
+StartupNotify=true

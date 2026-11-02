@@ -43,3 +43,8 @@ janela ajuda a reproduzir a operação manualmente no backend.
 O arquivo `.desktop` é instalado em `~/.local/share/applications/`. O launcher
 fica em `~/.local/bin/`, permitindo abrir a aplicação pelo menu do KDE com dois
 cliques e mantendo o backend separado.
+
+Além desse modo instalado, cada Release inclui `Alpine Desktop Center.desktop`
+na raiz do diretório. Esse atalho usa a localização do próprio arquivo para
+abrir o launcher ao lado dele, permitindo executar a aplicação diretamente da
+pasta extraída sem instalação global.

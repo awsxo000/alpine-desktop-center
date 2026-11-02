@@ -7,3 +7,4 @@
 - Added two-click KDE `.desktop` integration.
 - Added backend discovery and activity log.
 - Added architecture and backend contract documentation.
+- Added a portable root `.desktop` launcher for two-click execution from a downloaded Release.
