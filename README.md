@@ -152,5 +152,5 @@ the fixed frontend/backend operations are listed in
 To build a combined release locally, use:
 
 ```sh
-sh scripts/package-release.sh 0.1.0-alpha.18 v1.37
+sh scripts/package-release.sh 0.1.0-alpha.26 v1.38
 ```

@@ -20,7 +20,7 @@ ações globais antes que qualquer processo seja iniciado.
 
 | Ação | Comando fixo |
 |---|---|
-| Apply Full Configuration | `sh instalar.sh` — saída compacta |
+| Apply Full Configuration | `make aplicar` — saída compacta |
 | Apply Full Configuration with Diagnostics | `make diagnostico` — execução detalhada |
 | Refresh Nix Apps | `~/.local/bin/atualizar-aplicativos-nix.sh` |
 
@@ -28,11 +28,11 @@ ações globais antes que qualquer processo seja iniciado.
 
 A aba **Modules** representa as roles do playbook principal. Cada módulo possui
 tag, descrição, verificação de presença, aplicação isolada e log persistente.
-A aplicação usa `ansible-playbook playbooks/site.yml --tags <tag>` e ativa a
-feature flag correspondente quando a role possui uma condição global.
+A aplicação usa `make aplicar-modulo MODULO=<tag>`; o Makefile carrega as
+variáveis de `.alpine-state/vars.yml` e executa o Ansible através do wrapper de
+`doas` temporário. A lista de módulos vem de `backend/modulos.json`.
 
-Os módulos disponíveis são `base`, `nix`, `steam`, `nix_opengl`, `rede`,
-`bluetooth`, `audio`, `swap`, `energia`, `fontes` e `kde`.
+Os módulos disponíveis são definidos em `backend/modulos.json`.
 
 O status é uma indicação operacional baseada em verificações fixas do sistema,
 como serviço OpenRC, executável instalado, processo ativo, presença de fontes ou

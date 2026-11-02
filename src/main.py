@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.25"
+APP_VERSION = "0.1.0-alpha.26"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -49,22 +49,21 @@ class ModuleSpec:
     description: str
     tag: str
     enable_var: str | None
-    check: tuple[str, ...]
 
 
-MODULES = (
-    ModuleSpec("base", "Base", "Core Alpine desktop packages and privileges.", "base", None, ("sh", "-c", "command -v doas >/dev/null && command -v ansible-playbook >/dev/null")),
-    ModuleSpec("nix", "Nix", "Nix package manager and user profile integration.", "nix", None, ("sh", "-c", "command -v nix >/dev/null || test -x \"$HOME/.local/share/nix/profiles/profile/bin/nix\"")),
-    ModuleSpec("steam", "Steam", "Steam installation and desktop integration.", "steam", "steam_habilitado=true", ("sh", "-c", "command -v steam >/dev/null || (command -v nix >/dev/null && nix profile list 2>/dev/null | grep -q steam)")),
-    ModuleSpec("nix_opengl", "Nix OpenGL", "Mesa/OpenGL integration for Nix applications.", "nix_opengl", "nix_opengl_habilitado=true", ("sh", "-c", "test -d /run/opengl-driver || test -d /run/opengl-driver-32")),
-    ModuleSpec("rede", "Network", "NetworkManager and KDE network integration.", "rede", "rede_habilitada=true", ("sh", "-c", "rc-service networkmanager status >/dev/null 2>&1")),
-    ModuleSpec("bluetooth", "Bluetooth", "BlueZ and KDE Bluetooth integration.", "bluetooth", "bluetooth_habilitado=true", ("sh", "-c", "rc-service bluetooth status >/dev/null 2>&1 || rc-service bluetoothd status >/dev/null 2>&1")),
-    ModuleSpec("audio", "Audio", "PipeWire and WirePlumber user audio services.", "audio", "audio_habilitado=true", ("sh", "-c", "pgrep -x pipewire >/dev/null || command -v pipewire >/dev/null")),
-    ModuleSpec("swap", "Swap", "Additional swapfile and hibernation support.", "swap", "swap_habilitada=true", ("sh", "-c", "swapon --show 2>/dev/null | tail -n +2 | grep -q .")),
-    ModuleSpec("energia", "Energy", "Elogind, polkit and desktop power actions.", "energia", "energia_habilitada=true", ("sh", "-c", "rc-service elogind status >/dev/null 2>&1")),
-    ModuleSpec("fontes", "Fonts", "Unicode, CJK, Japanese kanji and emoji coverage.", "fontes", "fontes_habilitadas=true", ("sh", "-c", "command -v fc-list >/dev/null && fc-list 2>/dev/null | grep -Eiq 'Noto|CJK|Emoji'")),
-    ModuleSpec("kde", "KDE", "KDE/OpenRC compatibility and System Monitor layout.", "kde", "kde_habilitado=true", ("sh", "-c", "command -v plasmashell >/dev/null || command -v kded6 >/dev/null")),
-)
+def load_module_catalog() -> tuple[ModuleSpec, ...]:
+    catalog_path = PACKAGE_ROOT / "backend" / "modulos.json"
+    try:
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+        return tuple(
+            ModuleSpec(str(item["key"]), str(item["title"]), str(item["description"]), str(item["tag"]), item.get("enable_var"))
+            for item in catalog
+        )
+    except (OSError, KeyError, TypeError, json.JSONDecodeError):
+        return ()
+
+
+MODULES = load_module_catalog()
 
 
 class Backend:
@@ -126,7 +125,7 @@ class Backend:
         if not self.path:
             return None
         if action == "apply" and module is None and (self.path / "instalar.sh").is_file():
-            return ["sh", "instalar.sh"]
+            return ["make", "aplicar"]
         if action == "diagnostics":
             return ["make", "diagnostico"]
         if action == "refresh":
@@ -145,14 +144,8 @@ class Backend:
                     return [found]
             return None
         if action == "module" and module is not None:
-            command = ["ansible-playbook", "playbooks/site.yml", "--tags", module.tag]
-            if module.enable_var:
-                command.extend(["-e", module.enable_var])
-            return command
+            return ["make", "aplicar-modulo", f"MODULO={module.tag}"]
         return None
-
-    def check_command(self, module: ModuleSpec) -> list[str]:
-        return list(module.check)
 
     def diagnostic_command(self, module: ModuleSpec) -> list[str]:
         return ["make", "diagnostico-modulo", f"MODULO={module.key}"]
@@ -441,7 +434,7 @@ class MainWindow(QMainWindow):
         self.module_title.setText(module.title)
         self.module_description.setText(module.description)
         self.module_status.setText(f"Status: {self.statuses[module.key]}")
-        enabled = self.backend.available and self._idle()
+        enabled = self.backend.available and self.backend.valid and bool(MODULES) and self._idle()
         self.module_apply_button.setEnabled(enabled)
         self.module_check_button.setEnabled(enabled)
         self.module_log_button.setEnabled(True)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.26
+
+- Uses embedded backend v1.38 with runtime state outside `backend/`.
+- Loads the module list from the backend catalog instead of duplicating it in the frontend.
+- Uses Makefile operations with a temporary `doas` rule and removes it after completion.
+- Fixes diagnostics so optional check errors do not lower the module's overall status.
+
 ## 0.1.0-alpha.25
 
 - Revalidates the embedded backend immediately before every backend operation.
