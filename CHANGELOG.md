@@ -6,3 +6,4 @@
 - Added fixed actions for backend installation, Nix menu refresh and diagnostics.
 - Added two-click KDE `.desktop` integration.
 - Added backend discovery and activity log.
+- Added architecture and backend contract documentation.
