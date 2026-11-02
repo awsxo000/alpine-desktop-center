@@ -2,6 +2,7 @@
 set -eu
 APP_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PYTHON="${ALPINE_DESKTOP_CENTER_PYTHON:-python3}"
+export ALPINE_DESKTOP_CENTER_ROOT=$(CDPATH= cd -- "$APP_DIR/.." && pwd)
 
 has_pyside6() {
   "$PYTHON" -c 'import PySide6' >/dev/null 2>&1

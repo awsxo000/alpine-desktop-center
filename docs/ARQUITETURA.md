@@ -15,18 +15,24 @@ O `alpine-desktop-center` contém somente a interface Qt, a descoberta do
 backend, o lançamento de ações fixas e a apresentação dos logs. Ele não copia
 roles, não edita playbooks e não interpreta comandos livres.
 
+O repositório fonte continua frontend-only. Durante uma release, o script de
+empacotamento copia uma tag fixa do repositório `alpine` para o pacote final.
+Assim, o usuário recebe um diretório combinado com `frontend/`, `backend/`, um
+executável na raiz e `RELEASE-VERSIONS`. O aplicativo usa exclusivamente
+`./backend/` dentro desse pacote e não procura um backend externo no `$HOME`.
+
 ```text
 KDE application menu
         |
         v
-Alpine Desktop Center (PySide6)
+Alpine Desktop Center (PySide6) [frontend/]
         |
         +-- sh instalar.sh
         +-- make diagnostico
         +-- Refresh Nix Apps
         |
         v
-alpine-desktop (Ansible backend)
+./backend/ (Ansible backend fixado pela release)
 ```
 
 ## Segurança operacional

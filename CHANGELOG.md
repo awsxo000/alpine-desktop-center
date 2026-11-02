@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.16
+
+- Added a self-contained release package with mandatory `frontend/` and `backend/` directories.
+- Pinned the release backend to `v1.36` and recorded its commit in `RELEASE-VERSIONS`.
+- Changed the frontend to use only the embedded backend; external backend discovery is no longer used.
+- Added the reproducible `scripts/package-release.sh` release packager.
+
 ## 0.1.0-alpha.15
 
 - Replaced one-line module checks with structured, read-only backend diagnostics.

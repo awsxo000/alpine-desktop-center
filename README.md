@@ -71,22 +71,23 @@ pip install -e .
 ./alpine-desktop-center
 ```
 
-The current alpha assumes that `alpine-desktop` is already cloned in one of
-these locations:
+The source checkout is intended for development and does not include the
+backend. Use a combined release package for normal testing and distribution.
+
+Release packages from `0.1.0-alpha.16` are self-contained and use only the
+backend bundled in the package. Their layout is intentionally simple:
 
 ```text
-~/alpine-desktop
-~/Documents/alpine-desktop
-~/Downloads/alpine-desktop
-~/Music/alpine-desktop
+Alpine-Desktop-Center-v0.1.0-alpha.16/
+├── Alpine Desktop Center
+├── frontend/
+├── backend/
+└── RELEASE-VERSIONS
 ```
 
-For another location, set the backend explicitly:
-
-```sh
-export ALPINE_DESKTOP_BACKEND="$HOME/path/to/alpine-desktop"
-./alpine-desktop-center
-```
+`RELEASE-VERSIONS` records the exact frontend version, backend tag, backend
+commit and diagnostic schema. The application does not fall back to a backend
+found elsewhere on the machine.
 
 ## Portable two-click mode
 
@@ -103,20 +104,19 @@ KDE may ask you to mark the downloaded `.desktop` file as trusted. Choose
 **Allow Launching** once. The application then opens normally and you can
 choose an action from its window.
 
-## Optional menu installation
+## Optional installation
 
-Install the launcher and desktop entry into the user profile:
+Keep the extracted package directory intact: the root executable resolves the
+adjacent `frontend/` and `backend/` directories. If a command on `PATH` is
+useful, copy the complete directory and create a symlink to the root launcher;
+do not copy only the frontend executable:
 
 ```sh
-mkdir -p ~/.local/bin ~/.local/share/applications
-cp alpine-desktop-center ~/.local/bin/
-cp resources/alpine-desktop-center.desktop ~/.local/share/applications/
-chmod +x ~/.local/bin/alpine-desktop-center
+mkdir -p ~/.local/opt ~/.local/bin
+cp -R Alpine-Desktop-Center-v0.1.0-alpha.16 ~/.local/opt/
+ln -sfn "$HOME/.local/opt/Alpine-Desktop-Center-v0.1.0-alpha.16/Alpine Desktop Center" \
+  ~/.local/bin/alpine-desktop-center
 ```
-
-If the project directory is not on `PATH`, use the included installer once or
-create a symlink from `~/.local/bin` to the launcher. After the KDE menu cache
-refreshes, search for **Alpine Desktop Center** and open it with two clicks.
 
 ## Relationship with the backend
 
@@ -133,3 +133,9 @@ privilege prompts and packaging integration will be validated incrementally.
 The design is described in [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md), and
 the fixed frontend/backend operations are listed in
 [`docs/CONTRATO-BACKEND.md`](docs/CONTRATO-BACKEND.md).
+
+To build a combined release locally, use:
+
+```sh
+sh scripts/package-release.sh 0.1.0-alpha.16 v1.36
+```

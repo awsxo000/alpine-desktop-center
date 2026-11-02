@@ -32,9 +32,10 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.15"
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-ICON_PATH = PROJECT_ROOT / "resources" / "alpine-desktop-center.svg"
+APP_VERSION = "0.1.0-alpha.16"
+FRONTEND_ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
+ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
 
 
 @dataclass(frozen=True)
@@ -66,19 +67,19 @@ class Backend:
     """Locate the backend and expose only fixed, named operations."""
 
     def __init__(self) -> None:
-        configured = os.environ.get("ALPINE_DESKTOP_BACKEND", "").strip()
-        candidates = [
-            Path(configured).expanduser() if configured else None,
-            Path.home() / "alpine-desktop",
-            Path.home() / "Documents" / "alpine-desktop",
-            Path.home() / "Downloads" / "alpine-desktop",
-            Path.home() / "Music" / "alpine-desktop",
-        ]
-        self.path = next(
-            (path for path in candidates if path and (path / "Makefile").is_file()),
-            None,
-        )
+        embedded = PACKAGE_ROOT / "backend"
+        self.path = embedded if (embedded / "Makefile").is_file() else None
         self.log_dir = Path.home() / ".local" / "state" / "alpine-desktop-center" / "logs"
+        self.version = self._read_version()
+
+    def _read_version(self) -> str:
+        manifest = PACKAGE_ROOT / "RELEASE-VERSIONS"
+        if not manifest.is_file():
+            return "embedded package manifest unavailable"
+        for line in manifest.read_text(errors="replace").splitlines():
+            if line.startswith("backend_version="):
+                return line.partition("=")[2].strip()
+        return "embedded backend version unavailable"
 
     @property
     def available(self) -> bool:
@@ -321,11 +322,11 @@ class MainWindow(QMainWindow):
 
     def _refresh_backend_status(self) -> None:
         if self.backend.available:
-            self.backend_label.setText(str(self.backend.path))
+            self.backend_label.setText(f"{self.backend.path} ({self.backend.version})")
             self.log.appendPlainText("Backend detected. Ready for global or modular actions.")
             return
         self.backend_label.setText("Not detected")
-        self.log.appendPlainText("Backend not found. Set ALPINE_DESKTOP_BACKEND or clone alpine-desktop into ~/alpine-desktop.")
+        self.log.appendPlainText("Embedded backend not found. Extract the complete release package with its backend/ directory.")
         self._set_actions_enabled(False)
 
     def _module_selected(self, row: int) -> None:
