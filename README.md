@@ -59,14 +59,14 @@ export ALPINE_DESKTOP_BACKEND="$HOME/path/to/alpine-desktop"
 
 ## Portable two-click mode
 
-The Release includes `Alpine Desktop Center.desktop` in the project folder.
-After extracting the Release, open that file with two clicks. It launches the
-portable copy of the application from the same folder and does not require
-installing a desktop entry globally.
+The Release includes an executable named `Alpine Desktop Center` in the
+project folder. After extracting the Release, open that file with two clicks.
+It launches the portable copy of the application from the same folder and
+does not require installing a desktop entry globally.
 
-The desktop entry delegates path resolution to `launch-from-desktop.sh`, so it
-also works when the extracted folder is under `Downloads` or has spaces in its
-name.
+The `.desktop` entry remains available for optional menu installation. It is
+not the primary portable launcher because local `.desktop` files in a download
+folder require absolute executable paths on some KDE configurations.
 
 KDE may ask you to mark the downloaded `.desktop` file as trusted. Choose
 **Allow Launching** once. The application then opens normally and you can
