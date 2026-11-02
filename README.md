@@ -64,6 +64,10 @@ After extracting the Release, open that file with two clicks. It launches the
 portable copy of the application from the same folder and does not require
 installing a desktop entry globally.
 
+The desktop entry delegates path resolution to `launch-from-desktop.sh`, so it
+also works when the extracted folder is under `Downloads` or has spaces in its
+name.
+
 KDE may ask you to mark the downloaded `.desktop` file as trusted. Choose
 **Allow Launching** once. The application then opens normally and you can
 choose an action from its window.
