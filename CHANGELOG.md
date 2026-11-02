@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.28
+
+- Fixes runtime state creation so `.alpine-state` is consistently placed at the release root.
+- Aligns collection installation, Makefile lookup and installer lookup to the same directory.
+
 ## 0.1.0-alpha.27
 
 - Automatically prepares `.alpine-state` before module or full application when the release has not been initialized.
