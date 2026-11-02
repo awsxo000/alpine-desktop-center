@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.17
+
+- Uses backend v1.37 with corrected PipeWire session diagnostics.
+- Reports `wpctl`/`pactl` evidence instead of treating process discovery as the primary audio signal.
+- Includes audited network, Bluetooth and swap checks from the embedded backend.
+
 ## 0.1.0-alpha.16
 
 - Added a self-contained release package with mandatory `frontend/` and `backend/` directories.

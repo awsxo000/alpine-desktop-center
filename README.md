@@ -74,11 +74,11 @@ pip install -e .
 The source checkout is intended for development and does not include the
 backend. Use a combined release package for normal testing and distribution.
 
-Release packages from `0.1.0-alpha.16` are self-contained and use only the
+Release packages from `0.1.0-alpha.16` onward are self-contained and use only the
 backend bundled in the package. Their layout is intentionally simple:
 
 ```text
-Alpine-Desktop-Center-v0.1.0-alpha.16/
+Alpine-Desktop-Center-v0.1.0-alpha.17/
 ├── Alpine Desktop Center
 ├── frontend/
 ├── backend/
@@ -113,8 +113,8 @@ do not copy only the frontend executable:
 
 ```sh
 mkdir -p ~/.local/opt ~/.local/bin
-cp -R Alpine-Desktop-Center-v0.1.0-alpha.16 ~/.local/opt/
-ln -sfn "$HOME/.local/opt/Alpine-Desktop-Center-v0.1.0-alpha.16/Alpine Desktop Center" \
+cp -R Alpine-Desktop-Center-v0.1.0-alpha.17 ~/.local/opt/
+ln -sfn "$HOME/.local/opt/Alpine-Desktop-Center-v0.1.0-alpha.17/Alpine Desktop Center" \
   ~/.local/bin/alpine-desktop-center
 ```
 
@@ -137,5 +137,5 @@ the fixed frontend/backend operations are listed in
 To build a combined release locally, use:
 
 ```sh
-sh scripts/package-release.sh 0.1.0-alpha.16 v1.36
+sh scripts/package-release.sh 0.1.0-alpha.17 v1.37
 ```
