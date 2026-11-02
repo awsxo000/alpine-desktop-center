@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.27
+
+- Automatically prepares `.alpine-state` before module or full application when the release has not been initialized.
+- Keeps read-only `Check Status` independent from Ansible preparation.
+- Separates Makefile command lines from JSON output in the activity log.
+
 ## 0.1.0-alpha.26
 
 - Uses embedded backend v1.38 with runtime state outside `backend/`.

@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.26"
+APP_VERSION = "0.1.0-alpha.27"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -551,9 +551,9 @@ class MainWindow(QMainWindow):
         self.active_purpose = purpose
         self.active_module = module
         self.active_output = ""
-        self.log.appendPlainText(f"\n$ {' '.join(command)}")
+        self.log.appendPlainText(f"\n$ {' '.join(command)}\n")
         if module and purpose == "module":
-            self._append_module_log(module, f"\n$ {' '.join(command)}")
+            self._append_module_log(module, f"\n$ {' '.join(command)}\n")
         self._set_actions_enabled(False)
         self.process = QProcess(self)
         self.process.setWorkingDirectory(str(self.backend.path))
