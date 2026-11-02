@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Alpine Desktop Center
 Comment=Open Alpine Desktop Center from this folder
-Exec=/bin/sh -c "exec \"$(dirname -- \"$1\")/launch-from-desktop.sh\" \"$1\"" -- %k
+Exec=/bin/sh -e -c "exec \\"\\$(dirname -- \\"\\$0\\")/alpine-desktop-center\\" %k
 Icon=computer
 Terminal=false
 Type=Application
