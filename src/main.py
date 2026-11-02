@@ -33,7 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.20"
+APP_VERSION = "0.1.0-alpha.21"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -70,7 +70,7 @@ class Backend:
     def __init__(self) -> None:
         embedded = PACKAGE_ROOT / "backend"
         self.path = embedded if (embedded / "Makefile").is_file() else None
-        self.log_dir = Path.home() / ".local" / "state" / "alpine-desktop-center" / "logs"
+        self.log_dir = Path.home() / ".local" / "state" / "alpine-desktop-center" / "logs" / APP_VERSION
         self.version = self._read_version()
 
     def _read_version(self) -> str:
@@ -124,8 +124,8 @@ class Backend:
     def log_path(self, module_key: str) -> Path:
         return self.log_dir / module_key / "execution.log"
 
-    def diagnostic_log_path(self, module_key: str) -> Path:
-        return self.log_dir / module_key / "diagnostics.jsonl"
+    def diagnostic_log_dir(self, module_key: str) -> Path:
+        return self.log_dir / module_key / "diagnostics"
 
     def log_directory(self, module_key: str) -> Path:
         return self.log_dir / module_key
@@ -395,20 +395,26 @@ class MainWindow(QMainWindow):
         if not module:
             return
         path = self.backend.log_path(module.key)
-        diagnostic_path = self.backend.diagnostic_log_path(module.key)
         execution = path.read_text(errors="replace") if path.is_file() else "No Ansible execution log recorded for this module yet."
-        diagnostic_lines = diagnostic_path.read_text(errors="replace").splitlines() if diagnostic_path.is_file() else []
+        diagnostic_dir = self.backend.diagnostic_log_dir(module.key)
+        diagnostic_files = sorted(diagnostic_dir.glob("*.json")) if diagnostic_dir.is_dir() else []
         latest = None
-        for line in reversed(diagnostic_lines):
+        for diagnostic_path in reversed(diagnostic_files):
             try:
-                candidate = json.loads(line)
-            except json.JSONDecodeError:
+                candidate = json.loads(diagnostic_path.read_text(errors="replace"))
+            except (OSError, json.JSONDecodeError):
                 continue
             if isinstance(candidate, dict):
                 latest = candidate
                 break
         latest_text = self._format_diagnostic(latest) if latest else "No diagnostic history recorded for this module yet."
-        history = "\n".join(diagnostic_lines) if diagnostic_lines else "No diagnostic history recorded for this module yet."
+        history_parts = []
+        for diagnostic_path in reversed(diagnostic_files):
+            try:
+                history_parts.append(f"--- {diagnostic_path.name} ---\n{diagnostic_path.read_text(errors='replace')}")
+            except OSError:
+                continue
+        history = "\n".join(history_parts) if history_parts else "No diagnostic history recorded for this module yet."
         self.module_log.setPlainText(
             f"=== Latest saved diagnostic ===\n{latest_text}\n\n"
             f"=== Ansible execution log ===\n{execution}\n\n"
@@ -520,8 +526,10 @@ class MainWindow(QMainWindow):
         self.module_status.setText(f"Status: {status}")
         if self._selected_module() and self._selected_module().key == module.key:
             self.module_current_status.setPlainText(self._format_diagnostic(report))
-        path = self.backend.diagnostic_log_path(module.key)
-        self._append_log(path, json.dumps(report, ensure_ascii=False, separators=(",", ":")) + "\n")
+        checked_at = str(report.get("checked_at", "now")).replace(":", "").replace("+", "-").replace(" ", "_")
+        diagnostic_path = self.backend.diagnostic_log_dir(module.key) / f"{checked_at}.json"
+        diagnostic_path.parent.mkdir(parents=True, exist_ok=True)
+        diagnostic_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         self.log.appendPlainText(f"{module.title}: {status}.")
 
     def _format_diagnostic(self, report: dict[str, object]) -> str:

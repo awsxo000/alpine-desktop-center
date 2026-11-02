@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.21
+
+- Starts a fresh log namespace for every frontend release.
+- Saves each `Check Status` result as an individual timestamped JSON file.
+- Replaces the append-only diagnostic JSONL history with `diagnostics/<timestamp>.json` files.
+
 ## 0.1.0-alpha.20
 
 - Removed fallback support for flat logs from pre-alpha.19 releases.

@@ -21,11 +21,12 @@ Global actions remain available:
 - **Refresh Nix Apps** — runs the installed `Refresh Nix Apps` utility when available;
 - **Apply Full Configuration with Diagnostics** — runs `make diagnostico` with detailed Ansible output.
 
-Module logs are stored under `~/.local/state/alpine-desktop-center/logs/<module>/`.
+Module logs are stored under `~/.local/state/alpine-desktop-center/logs/<frontend-version>/<module>/`.
 In the Modules tab, `Check Status` shows the current live result, while
 `View Module Log` displays the latest saved record and older history. `Open Log
 Folder` opens the selected module directory in the file manager. Each module
-directory contains `execution.log` and `diagnostics.jsonl`.
+directory contains `execution.log` and one timestamped JSON file per status check
+under `diagnostics/`. Each release starts with a fresh log namespace.
 
 The application opens as a normal KDE desktop application. It does not execute
 arbitrary commands typed into the interface. Backend output is shown in the
