@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.13"
+APP_VERSION = "0.1.0-alpha.14"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ICON_PATH = PROJECT_ROOT / "resources" / "alpine-desktop-center.svg"
 
@@ -91,12 +91,16 @@ class Backend:
         if action == "diagnostics":
             return ["make", "diagnostico"]
         if action == "refresh":
-            names = ("refresh-nix-apps", "atualizar-aplicativos-nix", "Refresh Nix Apps")
+            names = (
+                "atualizar-aplicativos-nix.sh",
+                "refresh-nix-apps",
+                "atualizar-aplicativos-nix",
+            )
             for name in names:
                 candidate = Path.home() / ".local" / "bin" / name
-                if candidate.is_file() and os.access(candidate, os.X_OK):
-                    return [str(candidate)]
-            for name in names[:2]:
+                if candidate.is_file():
+                    return [str(candidate)] if os.access(candidate, os.X_OK) else ["sh", str(candidate)]
+            for name in names:
                 found = shutil.which(name)
                 if found:
                     return [found]
@@ -181,7 +185,7 @@ class MainWindow(QMainWindow):
         action_layout = QHBoxLayout(actions)
         self.apply_button = self._button("Apply Full Configuration", "apply")
         self.refresh_button = self._button("Refresh Nix Apps", "refresh")
-        self.diagnostics_button = self._button("Run Full Diagnostics", "diagnostics")
+        self.diagnostics_button = self._button("Apply Full Configuration with Diagnostics", "diagnostics")
         self.check_all_button = QPushButton("Check All Modules")
         self.check_all_button.setMinimumHeight(42)
         self.check_all_button.clicked.connect(self._check_all_modules)
@@ -377,8 +381,13 @@ class MainWindow(QMainWindow):
         if command is None:
             QMessageBox.warning(self, APP_NAME, "This action is not available. Check the backend installation.")
             return
-        if action == "apply":
-            answer = QMessageBox.question(self, APP_NAME, "Apply the complete Alpine Desktop configuration now?")
+        if action in ("apply", "diagnostics"):
+            message = (
+                "Apply the complete Alpine Desktop configuration now?"
+                if action == "apply"
+                else "Apply the complete Alpine Desktop configuration with detailed diagnostics?"
+            )
+            answer = QMessageBox.question(self, APP_NAME, message)
             if answer != QMessageBox.StandardButton.Yes:
                 return
         self._start_process(command, action, None)

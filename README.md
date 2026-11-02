@@ -17,9 +17,9 @@ and open its persisted log.
 
 Global actions remain available:
 
-- **Apply Desktop Configuration** — runs `sh instalar.sh`;
+- **Apply Full Configuration** — runs `sh instalar.sh` with compact output;
 - **Refresh Nix Apps** — runs the installed `Refresh Nix Apps` utility when available;
-- **Run Diagnostics** — runs `make diagnostico`.
+- **Apply Full Configuration with Diagnostics** — runs `make diagnostico` with detailed Ansible output.
 
 Module logs are stored under `~/.local/state/alpine-desktop-center/logs/`.
 

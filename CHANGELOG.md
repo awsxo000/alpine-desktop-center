@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.14
+
+- Fixed discovery of the backend utility `atualizar-aplicativos-nix.sh`.
+- Renamed the detailed global action to `Apply Full Configuration with Diagnostics`.
+- Kept `Apply Full Configuration` as the compact-output mode.
+
 ## 0.1.0-alpha.13
 
 - Preserved native Qt/Plasma controls instead of restyling buttons and tabs.

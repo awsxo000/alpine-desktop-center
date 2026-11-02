@@ -7,9 +7,9 @@ pelo usuário. O backend `alpine-desktop` continua sendo a fonte de verdade.
 
 | Ação | Comando fixo |
 |---|---|
-| Apply Full Configuration | `sh instalar.sh` |
-| Run Full Diagnostics | `make diagnostico` |
-| Refresh Nix Apps | executável conhecido instalado no perfil do usuário |
+| Apply Full Configuration | `sh instalar.sh` — saída compacta |
+| Apply Full Configuration with Diagnostics | `make diagnostico` — execução detalhada |
+| Refresh Nix Apps | `~/.local/bin/atualizar-aplicativos-nix.sh` |
 
 ## Módulos
 
