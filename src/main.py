@@ -19,6 +19,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (
     QApplication,
     QFormLayout,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -36,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.30"
+APP_VERSION = "0.1.0-alpha.31"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -237,18 +238,21 @@ class MainWindow(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         actions = QGroupBox("Global actions")
-        action_layout = QHBoxLayout(actions)
-        self.apply_button = self._button("Apply Full Configuration", "apply")
-        self.check_stable_button = self._button("Check Stable Channel", "check_stable")
-        self.migrate_stable_button = self._button("Migrate to Latest Stable", "migrate_stable")
-        self.update_apps_button = self._button("Update Nix Apps", "update_apps")
-        self.refresh_button = self._button("Refresh Nix Apps", "refresh")
-        self.diagnostics_button = self._button("Apply Full Configuration with Diagnostics", "diagnostics")
-        self.check_all_button = QPushButton("Check All Modules")
+        action_layout = QGridLayout(actions)
+        self.apply_button = self._button("Apply", "apply", QStyle.StandardPixmap.SP_DialogApplyButton, "Apply the complete Alpine Desktop configuration")
+        self.check_stable_button = self._button("Stable", "check_stable", QStyle.StandardPixmap.SP_BrowserReload, "Check for a newer official Stable Nix channel")
+        self.migrate_stable_button = self._button("Migrate", "migrate_stable", QStyle.StandardPixmap.SP_ArrowRight, "Migrate to the latest official Stable Nix channel")
+        self.update_apps_button = self._button("Update Apps", "update_apps", QStyle.StandardPixmap.SP_ArrowUp, "Update all applications in the Nix user profile")
+        self.refresh_button = self._button("Refresh Menu", "refresh", QStyle.StandardPixmap.SP_BrowserReload, "Refresh the desktop menu entries for Nix applications")
+        self.diagnostics_button = self._button("Apply + Diagnose", "diagnostics", QStyle.StandardPixmap.SP_FileDialogDetailedView, "Apply the complete configuration and show detailed diagnostics")
+        self.check_all_button = QPushButton("Check Modules")
+        self.check_all_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton))
+        self.check_all_button.setToolTip("Run a live status check for every module")
         self.check_all_button.setMinimumHeight(42)
         self.check_all_button.clicked.connect(self._check_all_modules)
-        for button in (self.apply_button, self.check_stable_button, self.migrate_stable_button, self.update_apps_button, self.refresh_button, self.diagnostics_button, self.check_all_button):
-            action_layout.addWidget(button)
+        buttons = (self.apply_button, self.check_stable_button, self.migrate_stable_button, self.update_apps_button, self.refresh_button, self.diagnostics_button, self.check_all_button)
+        for index, button in enumerate(buttons):
+            action_layout.addWidget(button, index // 4, index % 4)
         layout.addWidget(actions)
 
         summary = QGroupBox("Module summary")
@@ -341,9 +345,15 @@ class MainWindow(QMainWindow):
         details.addWidget(self.module_status)
 
         buttons = QHBoxLayout()
-        self.module_apply_button = QPushButton("Apply Module")
-        self.module_check_button = QPushButton("Check Status")
-        self.module_log_button = QPushButton("View Module Log")
+        self.module_apply_button = QPushButton("Apply")
+        self.module_apply_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton))
+        self.module_apply_button.setToolTip("Apply the selected module")
+        self.module_check_button = QPushButton("Check")
+        self.module_check_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
+        self.module_check_button.setToolTip("Run a live status check for the selected module")
+        self.module_log_button = QPushButton("History")
+        self.module_log_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
+        self.module_log_button.setToolTip("View saved checks and Ansible execution logs")
         self.module_apply_button.clicked.connect(self._apply_selected_module)
         self.module_check_button.clicked.connect(self._check_selected_module)
         self.module_log_button.clicked.connect(self._view_selected_log)
@@ -385,8 +395,12 @@ class MainWindow(QMainWindow):
         self.module_folder_button.setEnabled(False)
         return tab
 
-    def _button(self, text: str, action: str) -> QPushButton:
+    def _button(self, text: str, action: str, icon: QStyle.StandardPixmap | None = None, tooltip: str = "") -> QPushButton:
         button = QPushButton(text)
+        if icon is not None:
+            button.setIcon(self.style().standardIcon(icon))
+        if tooltip:
+            button.setToolTip(tooltip)
         button.setMinimumHeight(42)
         button.clicked.connect(lambda: self._run_action(action))
         return button

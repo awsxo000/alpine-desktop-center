@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-FRONTEND_VERSION=${1:-0.1.0-alpha.30}
-BACKEND_VERSION=${2:-v1.42}
+FRONTEND_VERSION=${1:-0.1.0-alpha.31}
+BACKEND_VERSION=${2:-v1.43}
 REPO_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PACKAGE_NAME="Alpine-Desktop-Center-v${FRONTEND_VERSION}"
 BUILD_ROOT=${BUILD_ROOT:-"$REPO_ROOT/dist"}
@@ -13,9 +13,14 @@ trap 'rm -rf "$BACKEND_TMP"' EXIT HUP INT TERM
 rm -rf "$STAGE" "$BUILD_ROOT/$PACKAGE_NAME.tar.gz"
 mkdir -p "$STAGE/frontend" "$STAGE/backend"
 
-echo "Cloning backend ${BACKEND_VERSION}..."
-gh repo clone awsxo000/alpine "$BACKEND_TMP/backend" >/dev/null
-git -C "$BACKEND_TMP/backend" checkout --quiet "$BACKEND_VERSION"
+if [ -n "${BACKEND_SOURCE:-}" ]; then
+  echo "Using local backend source ${BACKEND_SOURCE}..."
+  cp -R "$BACKEND_SOURCE" "$BACKEND_TMP/backend"
+else
+  echo "Cloning backend ${BACKEND_VERSION}..."
+  gh repo clone awsxo000/alpine "$BACKEND_TMP/backend" >/dev/null
+  git -C "$BACKEND_TMP/backend" checkout --quiet "$BACKEND_VERSION"
+fi
 BACKEND_COMMIT=$(git -C "$BACKEND_TMP/backend" rev-parse HEAD)
 rm -rf "$BACKEND_TMP/backend/.git"
 

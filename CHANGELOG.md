@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.31
+
+- Reorganizes global actions into a compact two-row layout with icons and tooltips.
+- Shortens module actions to **Apply**, **Check** and **History**.
+- Translates backend diagnostic, preparation and Nix update output to English.
+
 ## 0.1.0-alpha.30
 
 - Replaces generic channel update with **Check Stable Channel** and **Migrate to Latest Stable**.
