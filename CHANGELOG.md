@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.30
+
+- Replaces generic channel update with **Check Stable Channel** and **Migrate to Latest Stable**.
+- Does not expose or suggest unstable channels.
+- Records the selected Stable version so future role applications preserve the migration.
+
 ## 0.1.0-alpha.29
 
 - Adds separate **Update Nix Channel** and **Update Nix Apps** actions.

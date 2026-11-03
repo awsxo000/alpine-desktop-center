@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-FRONTEND_VERSION=${1:-0.1.0-alpha.29}
-BACKEND_VERSION=${2:-v1.41}
+FRONTEND_VERSION=${1:-0.1.0-alpha.30}
+BACKEND_VERSION=${2:-v1.42}
 REPO_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PACKAGE_NAME="Alpine-Desktop-Center-v${FRONTEND_VERSION}"
 BUILD_ROOT=${BUILD_ROOT:-"$REPO_ROOT/dist"}

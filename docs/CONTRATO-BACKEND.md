@@ -22,9 +22,14 @@ ações globais antes que qualquer processo seja iniciado.
 |---|---|
 | Apply Full Configuration | `make aplicar` — saída compacta |
 | Apply Full Configuration with Diagnostics | `make diagnostico` — execução detalhada |
-| Update Nix Channel | `make atualizar-canal-nix` — atualiza os canais configurados |
+| Check Stable Channel | `make verificar-canal-stable-nix` — consulta a versão Stable oficial |
+| Migrate to Latest Stable | `make migrar-canal-stable-nix` — troca após confirmação |
 | Update Nix Apps | `make atualizar-aplicativos-nix` — atualiza o perfil do usuário |
 | Refresh Nix Apps | `~/.local/bin/atualizar-aplicativos-nix.sh` |
+
+A interface oferece somente o canal Stable. Canais `unstable` não são listados
+nem selecionáveis; uma alteração manual externa poderá ser sobrescrita quando a
+configuração Stable for aplicada novamente.
 
 ## Módulos
 
