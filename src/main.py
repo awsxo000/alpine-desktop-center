@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.31"
+APP_VERSION = "0.1.0-alpha.32"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -166,6 +166,10 @@ class Backend:
     def log_directory(self, module_key: str) -> Path:
         return self.log_dir / module_key
 
+    def global_log_path(self, action: str) -> Path:
+        """Persistent log for a global backend action."""
+        return self.log_dir / "global" / f"{action}.log"
+
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
@@ -177,6 +181,7 @@ class MainWindow(QMainWindow):
         self.active_purpose = ""
         self.active_module: ModuleSpec | None = None
         self.active_output = ""
+        self.active_log_path: Path | None = None
         self.statuses: dict[str, str] = {module.key: "Unknown" for module in MODULES}
         self.setWindowTitle(f"{APP_NAME} — {APP_VERSION}")
         self.setMinimumSize(980, 650)
@@ -206,9 +211,9 @@ class MainWindow(QMainWindow):
         title_column.addWidget(title)
         title_column.addWidget(subtitle)
         header.addLayout(title_column, 1)
-        self.theme_button = QPushButton()
+        self.theme_button = QToolButton()
         self.theme_button.setObjectName("ThemeButton")
-        self.theme_button.setMinimumHeight(36)
+        self.theme_button.setFixedSize(38, 38)
         self.theme_button.clicked.connect(self._toggle_theme)
         header.addWidget(self.theme_button)
         root_layout.addLayout(header)
@@ -277,14 +282,22 @@ class MainWindow(QMainWindow):
                 "text": "#f5f8ff", "muted": "#9bb0d1", "accent": "#4d7ff2",
                 "accent_hover": "#6b98ff", "border": "#29466e", "selection": "#1d4fae",
             }
-            self.theme_button.setText("Light theme")
+            self.theme_button.setIcon(QIcon.fromTheme("weather-clear"))
+            if self.theme_button.icon().isNull():
+                self.theme_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogYesButton))
+            self.theme_button.setToolTip("Switch to light theme")
+            self.theme_button.setAccessibleName("Switch to light theme")
         else:
             colors = {
                 "bg": "#f4f7fd", "surface": "#ffffff", "raised": "#eaf1fc",
                 "text": "#10213a", "muted": "#58708f", "accent": "#2864db",
                 "accent_hover": "#1d4fb6", "border": "#c5d5ec", "selection": "#dce9ff",
             }
-            self.theme_button.setText("Dark theme")
+            self.theme_button.setIcon(QIcon.fromTheme("weather-clear-night"))
+            if self.theme_button.icon().isNull():
+                self.theme_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogNoButton))
+            self.theme_button.setToolTip("Switch to dark theme")
+            self.theme_button.setAccessibleName("Switch to dark theme")
         palette = QPalette()
         palette.setColor(QPalette.ColorRole.Window, QColor(colors["bg"]))
         palette.setColor(QPalette.ColorRole.WindowText, QColor(colors["text"]))
@@ -576,9 +589,9 @@ class MainWindow(QMainWindow):
         self.active_purpose = purpose
         self.active_module = module
         self.active_output = ""
+        self.active_log_path = self.backend.log_path(module.key) if module and purpose == "module" else self.backend.global_log_path(purpose)
         self.log.appendPlainText(f"\n$ {' '.join(command)}\n")
-        if module and purpose == "module":
-            self._append_module_log(module, f"\n$ {' '.join(command)}\n")
+        self._append_log(self.active_log_path, f"\n$ {' '.join(command)}\n")
         self._set_actions_enabled(False)
         self.process = QProcess(self)
         self.process.setWorkingDirectory(str(self.backend.path))
@@ -598,8 +611,8 @@ class MainWindow(QMainWindow):
             self.active_output += text
             self.log.insertPlainText(text)
             self.log.ensureCursorVisible()
-            if self.active_module and self.active_purpose == "module":
-                self._append_module_log(self.active_module, text)
+            if self.active_log_path:
+                self._append_log(self.active_log_path, text)
 
     def _append_module_log(self, module: ModuleSpec, text: str) -> None:
         self._append_log(self.backend.log_path(module.key), text)
@@ -619,11 +632,14 @@ class MainWindow(QMainWindow):
         else:
             result = "completed successfully" if exit_code == 0 else f"failed with exit code {exit_code}"
             self.log.appendPlainText(f"\nAction {result}.")
+            if self.active_log_path:
+                self._append_log(self.active_log_path, f"\nAction {result}.\n")
             if purpose == "module" and module and exit_code == 0:
                 self.statuses[module.key] = "Applied"
                 self._update_module_row(module)
                 QTimer.singleShot(250, lambda: self._check_module_after_apply(module))
         self._set_actions_enabled(True)
+        self.active_log_path = None
         if purpose == "check" and getattr(self, "_check_queue", None):
             QTimer.singleShot(150, self._check_next)
         self._update_summary()

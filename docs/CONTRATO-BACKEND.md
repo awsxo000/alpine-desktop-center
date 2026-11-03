@@ -54,10 +54,16 @@ responsabilidade do frontend. Cada módulo possui sua própria pasta:
 ```text
 ./logs/<versao-frontend>/<modulo>/execution.log
 ./logs/<versao-frontend>/<modulo>/diagnostics/<data-e-hora>.json
+./logs/<versao-frontend>/global/<acao>.log
 ```
 
 Essa é a estrutura oficial e exclusiva do contrato atual; arquivos planos
 antigos na raiz de `logs/` não são importados nem exibidos.
+
+As ações globais também são persistidas pelo frontend. Por exemplo,
+`global/update_apps.log`, `global/check_stable.log` e
+`global/migrate_stable.log` armazenam o comando, a saída e o resultado de cada
+execução, mantendo o histórico dentro da própria pasta da release.
 
 Cada release usa seu próprio namespace de logs, por exemplo
 `logs/0.1.0-alpha.21/`. Assim, uma instalação nova começa sem registros da

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.32
+
+- Persists global action output under `logs/<release>/global/`, including Nix app updates, Stable checks and migrations.
+- Keeps module execution and diagnostic history in their existing module-specific folders.
+- Replaces the theme text button with a single icon toggle and tooltip.
+
 ## 0.1.0-alpha.31
 
 - Reorganizes global actions into a compact two-row layout with icons and tooltips.
