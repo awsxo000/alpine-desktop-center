@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-alpha.37
+
+- Opens the first-run dependency bootstrap in a visible terminal so `doas` can
+  receive the user's password instead of leaving the GUI apparently blocked.
+- Saves the bootstrap output inside the release logs and imports it into the
+  activity view when the terminal finishes.
+- Adds a **Show Logs** dialog for the most recent persistent execution log.
+- Expands **Show Logs** into a central audit view for live activity, global
+  actions, module executions and timestamped diagnostic JSON files.
+- Includes the portable desktop launcher and its helper in release packages.
+
 ## 0.1.0-alpha.36
 
 - Fixes desktop launching when the extracted release path contains spaces or

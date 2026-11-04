@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-FRONTEND_VERSION=${1:-0.1.0-alpha.36}
+FRONTEND_VERSION=${1:-0.1.0-alpha.37}
 BACKEND_VERSION=${2:-v1.43}
 REPO_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PACKAGE_NAME="Alpine-Desktop-Center-v${FRONTEND_VERSION}"
@@ -37,7 +37,8 @@ cp -R "$REPO_ROOT/CHANGELOG.md" "$REPO_ROOT/CONTRIBUTING.md" "$REPO_ROOT/LICENSE
   "$STAGE/frontend/"
 cp -R "$BACKEND_TMP/backend/." "$STAGE/backend/"
 cp "$REPO_ROOT/Alpine Desktop Center" "$STAGE/Alpine Desktop Center"
-chmod 0755 "$STAGE/Alpine Desktop Center" "$STAGE/frontend/alpine-desktop-center"
+cp "$REPO_ROOT/Alpine Desktop Center.desktop" "$REPO_ROOT/launch-from-desktop.sh" "$STAGE/"
+chmod 0755 "$STAGE/Alpine Desktop Center" "$STAGE/launch-from-desktop.sh" "$STAGE/frontend/alpine-desktop-center"
 
 (cd "$STAGE/backend" && find . -type f -print0 | sort -z | xargs -0 sha256sum | sed 's#  \./#  #') > "$STAGE/BACKEND-MANIFEST.sha256"
 

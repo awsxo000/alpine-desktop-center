@@ -17,11 +17,11 @@ and open its persisted log.
 
 Global actions remain available:
 
-- **Apply Full Configuration** — runs `make aplicar`, or `sh instalar.sh` on first use when `make` is missing;
+- **Apply Full Configuration** — runs `make aplicar`, or opens `sh instalar.sh` in a visible terminal on first use when `make` is missing;
 - **Refresh Nix Apps** — runs the installed `Refresh Nix Apps` utility when available;
 - **Apply Full Configuration with Diagnostics** — runs `make diagnostico` with detailed Ansible output.
 
-Module logs are stored inside the project/release under `./logs/<frontend-version>/<module>/`.
+Module logs are stored inside the project/release under `./logs/<frontend-version>/<module>/`. The Overview tab's **Show Logs** button audits the live session, global actions, module execution logs and timestamped diagnostic JSON files.
 In the Modules tab, `Check Status` shows the current live result, while
 `View Module Log` displays the latest saved record and older history. `Open Log
 Folder` opens the selected module directory in the file manager. Each module

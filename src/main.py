@@ -20,6 +20,7 @@ from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPalette
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QFormLayout,
     QGridLayout,
     QGroupBox,
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QPlainTextEdit,
+    QDialogButtonBox,
     QToolButton,
     QStyle,
     QTabWidget,
@@ -39,7 +41,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.36"
+APP_VERSION = "0.1.0-alpha.37"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -101,6 +103,30 @@ class Backend:
             (candidate for candidate in ("/usr/bin/make", "/bin/make") if Path(candidate).is_file()),
             None,
         )
+
+    def interactive_bootstrap_command(self, log_path: Path) -> list[str] | None:
+        """Run first-use installation in a visible terminal so doas can prompt."""
+        if not self.path or not (self.path / "instalar.sh").is_file():
+            return None
+        terminal = next(
+            (candidate for candidate in ("konsole", "xterm", "alacritty") if shutil.which(candidate)),
+            None,
+        )
+        if not terminal:
+            return None
+        script = (
+            f"mkdir -p {shlex.quote(str(log_path.parent))}; "
+            f": > {shlex.quote(str(log_path))}; "
+            f"cd {shlex.quote(str(self.path))}; "
+            f"sh instalar.sh > {shlex.quote(str(log_path))} 2>&1 & "
+            "pid=$!; "
+            f"tail -f {shlex.quote(str(log_path))} & tail_pid=$!; "
+            "wait \"$pid\"; status=$?; "
+            "kill \"$tail_pid\" 2>/dev/null || true; "
+            "wait \"$tail_pid\" 2>/dev/null || true; "
+            "exit \"$status\""
+        )
+        return [terminal, "-e", "sh", "-c", script]
 
     def validate(self) -> tuple[bool, str]:
         if not self.path:
@@ -205,6 +231,7 @@ class MainWindow(QMainWindow):
         self.active_output = ""
         self.active_log_path: Path | None = None
         self.logging_disabled = False
+        self.interactive_bootstrap = False
         self.statuses: dict[str, str] = {module.key: "Unknown" for module in MODULES}
         self.setWindowTitle(f"{APP_NAME} — {APP_VERSION}")
         self.setMinimumSize(980, 650)
@@ -289,13 +316,71 @@ class MainWindow(QMainWindow):
         summary_layout.addWidget(self.summary_label)
         layout.addWidget(summary)
 
-        log_label = QLabel("Activity log")
+        log_header = QHBoxLayout()
+        log_header.addWidget(QLabel("Activity log"))
+        log_header.addStretch(1)
+        self.show_logs_button = QPushButton("Show Logs")
+        self.show_logs_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
+        self.show_logs_button.setToolTip("Open the most recent persistent execution log")
+        self.show_logs_button.clicked.connect(self._show_logs)
+        log_header.addWidget(self.show_logs_button)
+        layout.addLayout(log_header)
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setPlaceholderText("Global and module output will appear here.")
         layout.addWidget(log_label)
         layout.addWidget(self.log, 1)
         return tab
+
+    def _show_logs(self) -> None:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Execution Log Audit")
+        dialog.resize(1100, 650)
+        dialog_layout = QVBoxLayout(dialog)
+        content_layout = QHBoxLayout()
+        entries = [("Live activity (current session)", None)]
+        if self.backend.log_dir.is_dir():
+            for path in sorted(self.backend.log_dir.rglob("*")):
+                if path.is_file() and path.suffix.lower() in {".log", ".json"}:
+                    entries.append((str(path.relative_to(self.backend.log_dir)), path))
+        entry_list = QListWidget()
+        for label, _path in entries:
+            entry_list.addItem(label)
+        entry_list.setMinimumWidth(330)
+        content_layout.addWidget(entry_list)
+        text = QPlainTextEdit()
+        text.setReadOnly(True)
+        content_layout.addWidget(text, 1)
+        dialog_layout.addLayout(content_layout, 1)
+
+        def load_entry(row: int) -> None:
+            if not 0 <= row < len(entries):
+                return
+            _label, path = entries[row]
+            if path is None:
+                text.setPlainText(self.log.toPlainText())
+            else:
+                try:
+                    text.setPlainText(path.read_text(errors="replace"))
+                except OSError as exc:
+                    text.setPlainText(f"Could not read this log:\n\n{exc}")
+
+        entry_list.currentRowChanged.connect(load_entry)
+        entry_list.setCurrentRow(0)
+        action_row = QHBoxLayout()
+        refresh = QPushButton("Refresh")
+        refresh.clicked.connect(lambda: self._refresh_log_audit(dialog))
+        action_row.addWidget(refresh)
+        action_row.addStretch(1)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(dialog.reject)
+        action_row.addWidget(buttons)
+        dialog_layout.addLayout(action_row)
+        dialog.exec()
+
+    def _refresh_log_audit(self, dialog: QDialog) -> None:
+        dialog.close()
+        self._show_logs()
 
     def _apply_theme(self) -> None:
         dark = self.theme != "light"
@@ -622,6 +707,17 @@ class MainWindow(QMainWindow):
         self.active_module = module
         self.active_output = ""
         self.active_log_path = self.backend.log_path(module.key) if module and purpose == "module" else self.backend.global_log_path(purpose)
+        launch_command = command
+        self.interactive_bootstrap = purpose == "apply" and command == ["sh", "instalar.sh"]
+        if self.interactive_bootstrap:
+            launch_command = self.backend.interactive_bootstrap_command(self.active_log_path) or []
+            if not launch_command:
+                self.log.appendPlainText(
+                    "The first installation requires an interactive terminal, but no supported terminal emulator was found."
+                )
+                QMessageBox.warning(self, APP_NAME, "Install Konsole, XTerm or Alacritty, then run Apply again.")
+                return
+            self.log.appendPlainText("\nOpening a terminal for the first installation. Enter the doas password there.\n")
         self.log.appendPlainText(f"\n$ {' '.join(command)}\n")
         self._append_log(self.active_log_path, f"\n$ {' '.join(command)}\n")
         self._set_actions_enabled(False)
@@ -639,7 +735,7 @@ class MainWindow(QMainWindow):
             "sh",
         )
         self.process.setProgram(shell)
-        self.process.setArguments(["-c", f"exec {shlex.join(command)}"])
+        self.process.setArguments(["-c", f"exec {shlex.join(launch_command)}"])
         self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self.process.readyReadStandardOutput.connect(self._read_output)
         self.process.finished.connect(self._process_finished)
@@ -673,6 +769,9 @@ class MainWindow(QMainWindow):
 
     def _process_finished(self, exit_code: int, _status: QProcess.ExitStatus) -> None:
         self._read_output()
+        if self.interactive_bootstrap and self.active_log_path and self.active_log_path.is_file():
+            bootstrap_output = self.active_log_path.read_text(errors="replace")
+            self.log.appendPlainText("\nBootstrap terminal log:\n" + bootstrap_output)
         purpose, module = self.active_purpose, self.active_module
         if purpose == "check" and module:
             self._finish_module_diagnostic(module, exit_code)
@@ -689,6 +788,7 @@ class MainWindow(QMainWindow):
                 QTimer.singleShot(250, lambda: self._check_module_after_apply(module))
         self._set_actions_enabled(True)
         self.active_log_path = None
+        self.interactive_bootstrap = False
         if purpose == "check" and getattr(self, "_check_queue", None):
             QTimer.singleShot(150, self._check_next)
         self._update_summary()
