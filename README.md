@@ -1,6 +1,6 @@
 # Alpine Desktop Center
 
-**Status:** experimental alpha (`0.1.0-alpha.38`)
+**Status:** experimental alpha (`0.1.0-alpha.39`)
 
 Alpine Desktop Center is a small graphical frontend for the stable
 [`alpine-desktop`](https://github.com/awsxo000/alpine) backend. It does not copy

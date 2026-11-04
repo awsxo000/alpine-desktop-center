@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.39
+
+- Fixes startup failure in the Overview tab caused by a stale `log_label`
+  reference left after the central log-audit header was introduced.
+- Keeps the Show Logs tooltip aligned with its full audit behavior.
+
 ## 0.1.0-alpha.38
 
 - Explains administrator permission requirements before opening the bootstrap

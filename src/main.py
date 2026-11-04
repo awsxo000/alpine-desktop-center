@@ -41,7 +41,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.38"
+APP_VERSION = "0.1.0-alpha.39"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -322,14 +322,13 @@ class MainWindow(QMainWindow):
         log_header.addStretch(1)
         self.show_logs_button = QPushButton("Show Logs")
         self.show_logs_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
-        self.show_logs_button.setToolTip("Open the most recent persistent execution log")
+        self.show_logs_button.setToolTip("Audit live activity and all persistent execution logs")
         self.show_logs_button.clicked.connect(self._show_logs)
         log_header.addWidget(self.show_logs_button)
         layout.addLayout(log_header)
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setPlaceholderText("Global and module output will appear here.")
-        layout.addWidget(log_label)
         layout.addWidget(self.log, 1)
         return tab
 
