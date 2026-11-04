@@ -1,6 +1,6 @@
 # Alpine Desktop Center
 
-**Status:** experimental alpha (`0.1.0-alpha.1`)
+**Status:** experimental alpha (`0.1.0-alpha.36`)
 
 Alpine Desktop Center is a small graphical frontend for the stable
 [`alpine-desktop`](https://github.com/awsxo000/alpine) backend. It does not copy
@@ -17,7 +17,7 @@ and open its persisted log.
 
 Global actions remain available:
 
-- **Apply Full Configuration** — runs `sh instalar.sh` with compact output;
+- **Apply Full Configuration** — runs `make aplicar`, or `sh instalar.sh` on first use when `make` is missing;
 - **Refresh Nix Apps** — runs the installed `Refresh Nix Apps` utility when available;
 - **Apply Full Configuration with Diagnostics** — runs `make diagnostico` with detailed Ansible output.
 
@@ -74,7 +74,7 @@ For development outside the system package, a generic Python setup is:
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
-pip install -e .
+pip install -e '.[pip]'
 ./alpine-desktop-center
 ```
 
@@ -85,7 +85,7 @@ Release packages from `0.1.0-alpha.16` onward are self-contained and use only th
 backend bundled in the package. Their layout is intentionally simple:
 
 ```text
-Alpine-Desktop-Center-v0.1.0-alpha.18/
+Alpine-Desktop-Center-v0.1.0-alpha.36/
 ├── Alpine Desktop Center
 ├── frontend/
 ├── backend/
@@ -128,8 +128,8 @@ do not copy only the frontend executable:
 
 ```sh
 mkdir -p ~/.local/opt ~/.local/bin
-cp -R Alpine-Desktop-Center-v0.1.0-alpha.18 ~/.local/opt/
-ln -sfn "$HOME/.local/opt/Alpine-Desktop-Center-v0.1.0-alpha.18/Alpine Desktop Center" \
+cp -R Alpine-Desktop-Center-v0.1.0-alpha.36 ~/.local/opt/
+ln -sfn "$HOME/.local/opt/Alpine-Desktop-Center-v0.1.0-alpha.36/Alpine Desktop Center" \
   ~/.local/bin/alpine-desktop-center
 ```
 
@@ -152,5 +152,5 @@ the fixed frontend/backend operations are listed in
 To build a combined release locally, use:
 
 ```sh
-sh scripts/package-release.sh 0.1.0-alpha.26 v1.38
+sh scripts/package-release.sh 0.1.0-alpha.36 v1.43
 ```

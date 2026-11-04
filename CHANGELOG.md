@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.36
+
+- Fixes desktop launching when the extracted release path contains spaces or
+  URI-encoded characters.
+- Keeps the source launcher rooted correctly in a development checkout.
+- Makes persistent logging and log-folder creation fail safely on read-only or
+  full filesystems.
+- Rejects nonzero, malformed, trailing-output and wrong-module diagnostic JSON.
+- Prevents diagnostic history collisions and clears stale batch-check queues.
+- Makes release archives reproducible with `SOURCE_DATE_EPOCH` and fixes local
+  backend-source staging.
+- Updates installation and release documentation to the current version.
+
 ## 0.1.0-alpha.35
 
 - Uses the embedded `instalar.sh` bootstrap when Apply is requested before

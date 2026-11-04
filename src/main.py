@@ -11,6 +11,7 @@ import json
 import hashlib
 import shlex
 import shutil
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,7 +39,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.35"
+APP_VERSION = "0.1.0-alpha.36"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -203,6 +204,7 @@ class MainWindow(QMainWindow):
         self.active_module: ModuleSpec | None = None
         self.active_output = ""
         self.active_log_path: Path | None = None
+        self.logging_disabled = False
         self.statuses: dict[str, str] = {module.key: "Unknown" for module in MODULES}
         self.setWindowTitle(f"{APP_NAME} — {APP_VERSION}")
         self.setMinimumSize(980, 650)
@@ -578,7 +580,11 @@ class MainWindow(QMainWindow):
         if not module:
             return
         folder = self.backend.log_directory(module.key)
-        folder.mkdir(parents=True, exist_ok=True)
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            QMessageBox.warning(self, APP_NAME, f"Could not create the log folder.\n\n{exc}")
+            return
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
     def _run_action(self, action: str) -> None:
@@ -606,9 +612,11 @@ class MainWindow(QMainWindow):
 
     def _start_process(self, command: list[str], purpose: str, module: ModuleSpec | None) -> None:
         if not self._backend_ready():
+            self._check_queue = []
             return
         if not self.backend.path or not self.backend.path.is_dir():
             self.log.appendPlainText("Could not start the backend command: backend working directory is missing.")
+            self._check_queue = []
             return
         self.active_purpose = purpose
         self.active_module = module
@@ -653,9 +661,15 @@ class MainWindow(QMainWindow):
         self._append_log(self.backend.log_path(module.key), text)
 
     def _append_log(self, path: Path, text: str) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("a", encoding="utf-8") as stream:
-            stream.write(text)
+        if self.logging_disabled:
+            return
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("a", encoding="utf-8") as stream:
+                stream.write(text)
+        except OSError as exc:
+            self.logging_disabled = True
+            self.log.appendPlainText(f"Persistent logging disabled: {exc}")
 
     def _process_finished(self, exit_code: int, _status: QProcess.ExitStatus) -> None:
         self._read_output()
@@ -680,13 +694,8 @@ class MainWindow(QMainWindow):
         self._update_summary()
 
     def _finish_module_diagnostic(self, module: ModuleSpec, exit_code: int) -> None:
-        report = None
-        try:
-            start = self.active_output.find("{")
-            report = json.loads(self.active_output[start:]) if start >= 0 else None
-        except json.JSONDecodeError:
-            report = None
-        if not isinstance(report, dict):
+        report = self._parse_json_report()
+        if exit_code != 0 or not isinstance(report, dict) or report.get("module") != module.key:
             self.statuses[module.key] = "Diagnostic error"
             self.module_status.setText("Status: Diagnostic error")
             self.log.appendPlainText(f"{module.title}: diagnostic output was invalid (exit code {exit_code}).")
@@ -705,16 +714,29 @@ class MainWindow(QMainWindow):
             self.module_current_status.setPlainText(self._format_diagnostic(report))
         checked_at = str(report.get("checked_at", "now")).replace(":", "").replace("+", "-").replace(" ", "_")
         diagnostic_path = self.backend.diagnostic_log_dir(module.key) / f"{checked_at}.json"
-        diagnostic_path.parent.mkdir(parents=True, exist_ok=True)
-        diagnostic_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        while diagnostic_path.exists():
+            diagnostic_path = self.backend.diagnostic_log_dir(module.key) / f"{checked_at}-{uuid.uuid4().hex[:8]}.json"
+        try:
+            diagnostic_path.parent.mkdir(parents=True, exist_ok=True)
+            diagnostic_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        except OSError as exc:
+            self.log.appendPlainText(f"Could not save diagnostic history: {exc}")
         self.log.appendPlainText(f"{module.title}: {status}.")
 
-    def _finish_stable_check(self, exit_code: int) -> None:
+    def _parse_json_report(self) -> dict[str, object] | None:
+        start = self.active_output.find("{")
+        if start < 0:
+            return None
         try:
-            start = self.active_output.find("{")
-            report = json.loads(self.active_output[start:]) if start >= 0 else {}
+            report, end = json.JSONDecoder().raw_decode(self.active_output[start:])
         except json.JSONDecodeError:
-            report = {}
+            return None
+        if self.active_output[start + end :].strip():
+            return None
+        return report if isinstance(report, dict) else None
+
+    def _finish_stable_check(self, exit_code: int) -> None:
+        report = self._parse_json_report() or {}
         if exit_code != 0 or not isinstance(report, dict):
             self.log.appendPlainText("Stable channel check failed.")
             return
@@ -757,6 +779,7 @@ class MainWindow(QMainWindow):
 
     def _process_error(self, error: QProcess.ProcessError) -> None:
         self._read_output()
+        self._check_queue = []
         details = self.process.errorString() if self.process else "Unknown process error"
         self.log.appendPlainText(f"\nCould not start the backend command: {details}.")
         if self.active_log_path:

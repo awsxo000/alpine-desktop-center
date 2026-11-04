@@ -1,12 +1,13 @@
 #!/bin/sh
 set -eu
 
-FRONTEND_VERSION=${1:-0.1.0-alpha.35}
+FRONTEND_VERSION=${1:-0.1.0-alpha.36}
 BACKEND_VERSION=${2:-v1.43}
 REPO_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PACKAGE_NAME="Alpine-Desktop-Center-v${FRONTEND_VERSION}"
 BUILD_ROOT=${BUILD_ROOT:-"$REPO_ROOT/dist"}
 STAGE="$BUILD_ROOT/$PACKAGE_NAME"
+SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-0}
 BACKEND_TMP=$(mktemp -d)
 trap 'rm -rf "$BACKEND_TMP"' EXIT HUP INT TERM
 
@@ -15,13 +16,18 @@ mkdir -p "$STAGE/frontend" "$STAGE/backend"
 
 if [ -n "${BACKEND_SOURCE:-}" ]; then
   echo "Using local backend source ${BACKEND_SOURCE}..."
-  cp -R "$BACKEND_SOURCE" "$BACKEND_TMP/backend"
+  [ -d "$BACKEND_SOURCE" ] || { echo "BACKEND_SOURCE must be a directory." >&2; exit 1; }
+  cp -R "$BACKEND_SOURCE/." "$BACKEND_TMP/backend/"
 else
   echo "Cloning backend ${BACKEND_VERSION}..."
   gh repo clone awsxo000/alpine "$BACKEND_TMP/backend" >/dev/null
   git -C "$BACKEND_TMP/backend" checkout --quiet "$BACKEND_VERSION"
 fi
-BACKEND_COMMIT=$(git -C "$BACKEND_TMP/backend" rev-parse HEAD)
+if BACKEND_COMMIT=$(git -C "$BACKEND_TMP/backend" rev-parse HEAD 2>/dev/null); then
+  :
+else
+  BACKEND_COMMIT=${BACKEND_COMMIT_OVERRIDE:-unavailable}
+fi
 rm -rf "$BACKEND_TMP/backend/.git"
 
 # The source repository stays frontend-only; the release artifact is combined.
@@ -57,5 +63,7 @@ Launch with:
 EOF
 
 mkdir -p "$BUILD_ROOT"
-tar -C "$BUILD_ROOT" -czf "$BUILD_ROOT/$PACKAGE_NAME.tar.gz" "$PACKAGE_NAME"
+find "$STAGE" -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
+tar -C "$BUILD_ROOT" --sort=name --owner=0 --group=0 --numeric-owner \
+  --mtime="@$SOURCE_DATE_EPOCH" -cf - "$PACKAGE_NAME" | gzip -n > "$BUILD_ROOT/$PACKAGE_NAME.tar.gz"
 printf '%s\n' "$BUILD_ROOT/$PACKAGE_NAME.tar.gz"
