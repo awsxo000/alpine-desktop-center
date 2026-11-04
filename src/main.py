@@ -38,7 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.34"
+APP_VERSION = "0.1.0-alpha.35"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -91,6 +91,16 @@ class Backend:
     def available(self) -> bool:
         return self.path is not None
 
+    @staticmethod
+    def _make_path() -> str | None:
+        found = shutil.which("make")
+        if found:
+            return found
+        return next(
+            (candidate for candidate in ("/usr/bin/make", "/bin/make") if Path(candidate).is_file()),
+            None,
+        )
+
     def validate(self) -> tuple[bool, str]:
         if not self.path:
             return False, "Embedded backend directory is missing."
@@ -126,20 +136,19 @@ class Backend:
     def command(self, action: str, module: ModuleSpec | None = None) -> list[str] | None:
         if not self.path:
             return None
-        make = shutil.which("make") or next(
-            (candidate for candidate in ("/usr/bin/make", "/bin/make") if Path(candidate).is_file()),
-            "make",
-        )
+        make = self._make_path()
         if action == "apply" and module is None and (self.path / "instalar.sh").is_file():
-            return [make, "aplicar"]
+            return [make, "aplicar"] if make else ["sh", "instalar.sh"]
         if action == "diagnostics":
-            return [make, "diagnostico"]
+            if make:
+                return [make, "diagnostico"]
+            return ["sh", "-c", "sh scripts/preparar-ansible.sh && exec make diagnostico"]
         if action == "check_stable":
-            return [make, "verificar-canal-stable-nix"]
+            return ["python3", "scripts/canal-stable-nix.py", "verificar"]
         if action == "migrate_stable":
-            return [make, "migrar-canal-stable-nix"]
+            return ["python3", "scripts/canal-stable-nix.py", "migrar"]
         if action == "update_apps":
-            return [make, "atualizar-aplicativos-nix"]
+            return ["sh", "scripts/atualizar-nix.sh", "aplicativos"]
         if action == "refresh":
             names = (
                 "atualizar-aplicativos-nix.sh",
@@ -156,15 +165,18 @@ class Backend:
                     return [found]
             return None
         if action == "module" and module is not None:
-            return [make, "aplicar-modulo", f"MODULO={module.tag}"]
+            arguments = ["aplicar-modulo", f"MODULO={module.tag}"]
+            if make:
+                return [make, *arguments]
+            return [
+                "sh",
+                "-c",
+                f"sh scripts/preparar-ansible.sh && exec make {shlex.join(arguments)}",
+            ]
         return None
 
     def diagnostic_command(self, module: ModuleSpec) -> list[str]:
-        make = shutil.which("make") or next(
-            (candidate for candidate in ("/usr/bin/make", "/bin/make") if Path(candidate).is_file()),
-            "make",
-        )
-        return [make, "diagnostico-modulo", f"MODULO={module.key}"]
+        return ["python3", "scripts/diagnostico-modulo.py", module.key, "--json"]
 
     def log_path(self, module_key: str) -> Path:
         return self.log_dir / module_key / "execution.log"

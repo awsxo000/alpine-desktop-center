@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.35
+
+- Uses the embedded `instalar.sh` bootstrap when Apply is requested before
+  `make` is installed.
+- Runs read-only diagnostics and Stable Nix checks without requiring make.
+- Prepares Ansible dependencies before modular application when make is absent.
+
 ## 0.1.0-alpha.34
 
 - Starts backend commands through the system POSIX shell to handle executable
