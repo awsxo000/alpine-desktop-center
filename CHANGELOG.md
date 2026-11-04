@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.41
+
+- Prevents the bootstrap terminal from duplicating its initial guidance when
+  the live log follower starts.
+- Keeps the `apk` command-tracing and heartbeat diagnostics from alpha.40.
+
 ## 0.1.0-alpha.40
 
 - Adds command tracing to the first-run installer terminal so the exact

@@ -41,7 +41,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.40"
+APP_VERSION = "0.1.0-alpha.41"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -124,7 +124,7 @@ class Backend:
             f"( while :; do sleep 15; printf '%s\\n' \"[still running] installer is waiting for apk or another setup step ($(date '+%H:%M:%S'))\" >> {shlex.quote(str(log_path))}; done ) & heartbeat_pid=$!; "
             f"sh -x instalar.sh >> {shlex.quote(str(log_path))} 2>&1 & "
             "pid=$!; "
-            f"tail -f {shlex.quote(str(log_path))} & tail_pid=$!; "
+            f"tail -n 0 -f {shlex.quote(str(log_path))} & tail_pid=$!; "
             "wait \"$pid\"; status=$?; "
             "kill \"$heartbeat_pid\" 2>/dev/null || true; "
             "kill \"$tail_pid\" 2>/dev/null || true; "
