@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.33
+
+- Resolves `make` through an absolute executable path when available.
+- Provides a complete PATH to backend processes launched from a graphical session.
+- Reports the specific QProcess startup error in the activity and persistent logs.
+
 ## 0.1.0-alpha.32
 
 - Persists global action output under `logs/<release>/global/`, including Nix app updates, Stable checks and migrations.

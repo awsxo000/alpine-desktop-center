@@ -13,7 +13,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QProcess, QSettings, QTimer, Qt
+from PySide6.QtCore import QProcess, QProcessEnvironment, QSettings, QTimer, Qt
 from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPalette
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import (
@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.32"
+APP_VERSION = "0.1.0-alpha.33"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -125,16 +125,20 @@ class Backend:
     def command(self, action: str, module: ModuleSpec | None = None) -> list[str] | None:
         if not self.path:
             return None
+        make = shutil.which("make") or next(
+            (candidate for candidate in ("/usr/bin/make", "/bin/make") if Path(candidate).is_file()),
+            "make",
+        )
         if action == "apply" and module is None and (self.path / "instalar.sh").is_file():
-            return ["make", "aplicar"]
+            return [make, "aplicar"]
         if action == "diagnostics":
-            return ["make", "diagnostico"]
+            return [make, "diagnostico"]
         if action == "check_stable":
-            return ["make", "verificar-canal-stable-nix"]
+            return [make, "verificar-canal-stable-nix"]
         if action == "migrate_stable":
-            return ["make", "migrar-canal-stable-nix"]
+            return [make, "migrar-canal-stable-nix"]
         if action == "update_apps":
-            return ["make", "atualizar-aplicativos-nix"]
+            return [make, "atualizar-aplicativos-nix"]
         if action == "refresh":
             names = (
                 "atualizar-aplicativos-nix.sh",
@@ -151,11 +155,15 @@ class Backend:
                     return [found]
             return None
         if action == "module" and module is not None:
-            return ["make", "aplicar-modulo", f"MODULO={module.tag}"]
+            return [make, "aplicar-modulo", f"MODULO={module.tag}"]
         return None
 
     def diagnostic_command(self, module: ModuleSpec) -> list[str]:
-        return ["make", "diagnostico-modulo", f"MODULO={module.key}"]
+        make = shutil.which("make") or next(
+            (candidate for candidate in ("/usr/bin/make", "/bin/make") if Path(candidate).is_file()),
+            "make",
+        )
+        return [make, "diagnostico-modulo", f"MODULO={module.key}"]
 
     def log_path(self, module_key: str) -> Path:
         return self.log_dir / module_key / "execution.log"
@@ -595,6 +603,13 @@ class MainWindow(QMainWindow):
         self._set_actions_enabled(False)
         self.process = QProcess(self)
         self.process.setWorkingDirectory(str(self.backend.path))
+        environment = QProcessEnvironment.systemEnvironment()
+        current_path = environment.value("PATH", "")
+        path_entries = ["/usr/local/bin", "/usr/bin", "/bin", str(Path.home() / ".local/bin")]
+        if current_path:
+            path_entries.append(current_path)
+        environment.insert("PATH", ":".join(dict.fromkeys(path_entries)))
+        self.process.setProcessEnvironment(environment)
         self.process.setProgram(command[0])
         self.process.setArguments(command[1:])
         self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
@@ -720,9 +735,12 @@ class MainWindow(QMainWindow):
         if self._idle():
             self._start_process(self.backend.diagnostic_command(module), "check", module)
 
-    def _process_error(self, _error: QProcess.ProcessError) -> None:
+    def _process_error(self, error: QProcess.ProcessError) -> None:
         self._read_output()
-        self.log.appendPlainText("\nCould not start the backend command.")
+        details = self.process.errorString() if self.process else "Unknown process error"
+        self.log.appendPlainText(f"\nCould not start the backend command: {details}.")
+        if self.active_log_path:
+            self._append_log(self.active_log_path, f"\nProcess start error ({error.name}): {details}.\n")
         self._set_actions_enabled(True)
 
     def _update_module_row(self, module: ModuleSpec) -> None:
