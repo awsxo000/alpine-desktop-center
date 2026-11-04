@@ -41,7 +41,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.37"
+APP_VERSION = "0.1.0-alpha.38"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -117,6 +117,7 @@ class Backend:
         script = (
             f"mkdir -p {shlex.quote(str(log_path.parent))}; "
             f": > {shlex.quote(str(log_path))}; "
+            f"printf '%s\\n' 'Alpine Desktop Center first-run setup' 'Administrator permission is required to install make, Python, Ansible and doas.' 'When doas asks for your password, type it in this terminal.' 'The password is not collected or stored by Alpine Desktop Center.' 'The password may be requested again if the doas authentication timeout expires.' | tee -a {shlex.quote(str(log_path))}; "
             f"cd {shlex.quote(str(self.path))}; "
             f"sh instalar.sh > {shlex.quote(str(log_path))} 2>&1 & "
             "pid=$!; "
@@ -693,6 +694,15 @@ class MainWindow(QMainWindow):
             answer = QMessageBox.question(self, APP_NAME, message)
             if answer != QMessageBox.StandardButton.Yes:
                 return
+        if command == ["sh", "instalar.sh"]:
+            QMessageBox.information(
+                self,
+                APP_NAME,
+                "The first setup needs administrator permission to install make, Python, Ansible and doas.\n\n"
+                "A terminal window will open. Type your password only in that terminal when doas asks for it.\n"
+                "The password is not collected or stored by Alpine Desktop Center. Depending on the doas timeout, "
+                "you may be asked to authenticate again during a later step.",
+            )
         self._start_process(command, action, None)
 
     def _start_process(self, command: list[str], purpose: str, module: ModuleSpec | None) -> None:

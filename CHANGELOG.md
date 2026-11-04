@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.38
+
+- Explains administrator permission requirements before opening the bootstrap
+  terminal.
+- Explains inside the terminal why `doas` asks for a password and that the
+  password is never collected or stored by the frontend.
+- Notes that a second authentication request can occur after the doas timeout.
+
 ## 0.1.0-alpha.37
 
 - Opens the first-run dependency bootstrap in a visible terminal so `doas` can
