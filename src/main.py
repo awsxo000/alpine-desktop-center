@@ -41,7 +41,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.39"
+APP_VERSION = "0.1.0-alpha.40"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -119,10 +119,14 @@ class Backend:
             f": > {shlex.quote(str(log_path))}; "
             f"printf '%s\\n' 'Alpine Desktop Center first-run setup' 'Administrator permission is required to install make, Python, Ansible and doas.' 'When doas asks for your password, type it in this terminal.' 'The password is not collected or stored by Alpine Desktop Center.' 'The password may be requested again if the doas authentication timeout expires.' | tee -a {shlex.quote(str(log_path))}; "
             f"cd {shlex.quote(str(self.path))}; "
-            f"sh instalar.sh > {shlex.quote(str(log_path))} 2>&1 & "
+            "printf '%s\\n' 'Starting the installer with command tracing.' 'If no package output appears, check the Alpine repositories or an existing apk lock.' | tee -a "
+            f"{shlex.quote(str(log_path))}; "
+            f"( while :; do sleep 15; printf '%s\\n' \"[still running] installer is waiting for apk or another setup step ($(date '+%H:%M:%S'))\" >> {shlex.quote(str(log_path))}; done ) & heartbeat_pid=$!; "
+            f"sh -x instalar.sh >> {shlex.quote(str(log_path))} 2>&1 & "
             "pid=$!; "
             f"tail -f {shlex.quote(str(log_path))} & tail_pid=$!; "
             "wait \"$pid\"; status=$?; "
+            "kill \"$heartbeat_pid\" 2>/dev/null || true; "
             "kill \"$tail_pid\" 2>/dev/null || true; "
             "wait \"$tail_pid\" 2>/dev/null || true; "
             "exit \"$status\""

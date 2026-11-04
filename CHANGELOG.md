@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.40
+
+- Adds command tracing to the first-run installer terminal so the exact
+  blocking step is visible.
+- Preserves the explanatory bootstrap messages in the persistent log.
+- Adds a periodic heartbeat while `apk` or another installer step is still
+  running, including guidance about repositories and package locks.
+
 ## 0.1.0-alpha.39
 
 - Fixes startup failure in the Overview tab caused by a stale `log_label`
