@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import json
 import hashlib
+import shlex
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,7 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 APP_NAME = "Alpine Desktop Center"
-APP_VERSION = "0.1.0-alpha.33"
+APP_VERSION = "0.1.0-alpha.34"
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = Path(os.environ.get("ALPINE_DESKTOP_CENTER_ROOT", FRONTEND_ROOT)).resolve()
 ICON_PATH = FRONTEND_ROOT / "resources" / "alpine-desktop-center.svg"
@@ -594,6 +595,9 @@ class MainWindow(QMainWindow):
     def _start_process(self, command: list[str], purpose: str, module: ModuleSpec | None) -> None:
         if not self._backend_ready():
             return
+        if not self.backend.path or not self.backend.path.is_dir():
+            self.log.appendPlainText("Could not start the backend command: backend working directory is missing.")
+            return
         self.active_purpose = purpose
         self.active_module = module
         self.active_output = ""
@@ -610,8 +614,12 @@ class MainWindow(QMainWindow):
             path_entries.append(current_path)
         environment.insert("PATH", ":".join(dict.fromkeys(path_entries)))
         self.process.setProcessEnvironment(environment)
-        self.process.setProgram(command[0])
-        self.process.setArguments(command[1:])
+        shell = next(
+            (candidate for candidate in ("/bin/sh", "/usr/bin/sh") if Path(candidate).is_file()),
+            "sh",
+        )
+        self.process.setProgram(shell)
+        self.process.setArguments(["-c", f"exec {shlex.join(command)}"])
         self.process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
         self.process.readyReadStandardOutput.connect(self._read_output)
         self.process.finished.connect(self._process_finished)

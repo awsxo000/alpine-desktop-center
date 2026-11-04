@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-FRONTEND_VERSION=${1:-0.1.0-alpha.33}
+FRONTEND_VERSION=${1:-0.1.0-alpha.34}
 BACKEND_VERSION=${2:-v1.43}
 REPO_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PACKAGE_NAME="Alpine-Desktop-Center-v${FRONTEND_VERSION}"

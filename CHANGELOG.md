@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.34
+
+- Starts backend commands through the system POSIX shell to handle executable
+  interpreter failures and report the underlying command error.
+- Verifies that the embedded backend working directory exists before launch.
+
 ## 0.1.0-alpha.33
 
 - Resolves `make` through an absolute executable path when available.
